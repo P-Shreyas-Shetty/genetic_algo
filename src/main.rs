@@ -1,8 +1,8 @@
-mod node_base;
-use node_base::cmp::Eq;
-use node_base::ops::{Add, Mul};
-use node_base::Node;
-use node_base::{Type, TypeV, Val};
+mod node;
+use node::cmp::Eq;
+use node::ops::{Add, Mul};
+use node::Node;
+use node::{Type, TypeV, Val};
 
 fn main() {
     let v0 = Val::new(Type::int(0));
