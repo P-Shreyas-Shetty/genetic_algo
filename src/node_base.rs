@@ -102,7 +102,6 @@ pub trait Node {
     fn get_type_zero(&self) -> NodeRef;
 }
 
-
 /// Special FnNode trait for function node
 /// They will define fn_eval function, which'll be used
 /// instead of having function member or other mechanisms
@@ -115,11 +114,15 @@ pub trait FnNode: Node {
 /// used only for setting "zero" node
 pub struct Null {
     rtype: TypeV,
+    arg_types: Vec<TypeV>,
 }
 
 impl Null {
     pub fn zero(rtype: TypeV) -> NodeRef {
-        Box::new(Null { rtype })
+        Box::new(Null {
+            rtype,
+            arg_types: vec![],
+        })
     }
 }
 
@@ -135,7 +138,7 @@ impl Node for Null {
     }
 
     fn get_arg_types(&self) -> &[TypeV] {
-        return &vec![];
+        return &self.arg_types;
     }
     fn get_type_zero(&self) -> NodeRef {
         Null::zero(self.rtype)
@@ -146,6 +149,7 @@ impl Node for Null {
 pub struct Val {
     rtype: TypeV,
     pub v: Type,
+    arg_types: Vec<TypeV>,
 }
 
 impl Val {
@@ -168,6 +172,7 @@ impl Val {
         Box::new(Val {
             v: val,
             rtype: rtype,
+            arg_types: vec![],
         })
     }
     pub fn zero(rtype: TypeV) -> NodeRef {
@@ -177,7 +182,11 @@ impl Val {
             TypeV::UInt => Type::uint(0),
             TypeV::Bool => Type::bool(false),
         };
-        return Box::new(Val { v, rtype });
+        return Box::new(Val {
+            v,
+            rtype,
+            arg_types: vec![],
+        });
     }
 }
 
@@ -195,7 +204,7 @@ impl Node for Val {
     }
 
     fn get_arg_types(&self) -> &[TypeV] {
-        return &vec![];
+        return &self.arg_types;
     }
     fn get_type_zero(&self) -> NodeRef {
         Self::zero(self.rtype)
@@ -205,6 +214,7 @@ impl Node for Val {
 pub struct Var {
     rtype: TypeV,
     pub idx: usize,
+    arg_types: Vec<TypeV>,
 }
 
 impl Var {
@@ -212,6 +222,7 @@ impl Var {
         Box::new(Var {
             idx: idx,
             rtype: rtype,
+            arg_types: vec![],
         })
     }
 }
@@ -227,7 +238,7 @@ impl Node for Var {
         self.rtype
     }
     fn get_arg_types(&self) -> &[TypeV] {
-        return vec![];
+        return &self.arg_types;
     }
     fn get_type_zero(&self) -> NodeRef {
         Self::new(0, self.rtype)
@@ -289,7 +300,7 @@ pub mod ops {
             return &&self.arg_types;
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
 
@@ -346,7 +357,7 @@ pub mod ops {
             return &self.arg_types;
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
 
@@ -403,7 +414,7 @@ pub mod ops {
             return &self.arg_types;
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
 
@@ -434,7 +445,7 @@ pub mod ops {
             })
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
 
@@ -463,7 +474,7 @@ pub mod ops {
             return &self.arg_types;
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
     pub struct Pow {
@@ -522,7 +533,7 @@ pub mod ops {
             return &self.arg_types;
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
 }
@@ -580,7 +591,7 @@ pub mod logic {
             return &self.arg_types;
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
 
@@ -636,7 +647,7 @@ pub mod logic {
             return &self.arg_types;
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
 
@@ -683,7 +694,7 @@ pub mod logic {
             return &self.arg_types;
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
 }
@@ -750,7 +761,7 @@ pub mod cmp {
             return &self.arg_types;
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
 
@@ -814,7 +825,7 @@ pub mod cmp {
             return &self.arg_types;
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
 
@@ -877,7 +888,7 @@ pub mod cmp {
             return &self.arg_types;
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
 
@@ -940,7 +951,7 @@ pub mod cmp {
             return &self.arg_types;
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
 
@@ -1003,7 +1014,7 @@ pub mod cmp {
             return &self.arg_types;
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
 
@@ -1066,7 +1077,7 @@ pub mod cmp {
             return &self.arg_types;
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
 }
@@ -1082,11 +1093,7 @@ pub mod misc {
     }
 
     impl Cond {
-        pub fn new(
-            cond: NodeRef,
-            iftrue: NodeRef,
-            iffalse: NodeRef,
-        ) -> NodeRef {
+        pub fn new(cond: NodeRef, iftrue: NodeRef, iffalse: NodeRef) -> NodeRef {
             let rtype = iftrue.get_rtype();
             assert_eq!(iftrue.get_rtype(), iffalse.get_rtype());
             assert_eq!(cond.get_rtype(), TypeV::Bool);
@@ -1135,7 +1142,7 @@ pub mod misc {
             return &self.arg_types;
         }
         fn get_type_zero(&self) -> NodeRef {
-            Self::zero(self.rtype, self.arg_types)
+            Self::zero(self.rtype, self.arg_types.clone())
         }
     }
 }
@@ -1146,12 +1153,14 @@ pub mod math {
         ($type_name: ident, $expr_fn: expr) => {
             pub struct $type_name {
                 arg: NodeRef,
+                arg_types: Vec<TypeV>,
             }
 
             impl $type_name {
                 pub fn zero() -> NodeRef {
                     Box::new($type_name {
                         arg: Null::zero(TypeV::Float),
+                        arg_types: vec![TypeV::Float],
                     })
                 }
             }
@@ -1176,7 +1185,7 @@ pub mod math {
                 }
 
                 fn get_arg_types(&self) -> &[TypeV] {
-                    return vec![TypeV::Float];
+                    return &self.arg_types;
                 }
                 fn get_type_zero(&self) -> NodeRef {
                     Self::zero()
@@ -1207,15 +1216,15 @@ pub struct Tree {
     rtype: TypeV,
 }
 
-struct BuilderTable  {
+pub struct BuilderTable {
     rtype_bool: Vec<NodeRef>,
-    rtype_int : Vec<NodeRef>,
-    rtype_uint : Vec<NodeRef>,
-    rtype_float : Vec<NodeRef>,
+    rtype_int: Vec<NodeRef>,
+    rtype_uint: Vec<NodeRef>,
+    rtype_float: Vec<NodeRef>,
 }
 
 impl BuilderTable {
-    pub fn new()->BuilderTable {
+    pub fn new() -> BuilderTable {
         BuilderTable {
             rtype_bool: vec![],
             rtype_int: vec![],
@@ -1225,7 +1234,7 @@ impl BuilderTable {
     }
 
     pub fn push(&mut self, ty: TypeV, node: NodeRef) {
-        match ty{
+        match ty {
             TypeV::Bool => self.rtype_bool.push(node),
             TypeV::Int => self.rtype_int.push(node),
             TypeV::UInt => self.rtype_uint.push(node),
@@ -1236,24 +1245,24 @@ impl BuilderTable {
 
 pub mod btables {
     use super::*;
-pub struct FloatFnTable {
-    pub table: BuilderTable
-}
-
-impl FloatFnTable {
-    pub fn new()->Self {
-        let mut b = Self {
-            table: BuilderTable::new()
-        };
-        b.table.push(TypeV::Float, math::Sin::zero());
-        b.table.push(TypeV::Float, math::Cos::zero());
-        b.table.push(TypeV::Float, math::Tan::zero());
-        b.table.push(TypeV::Float, math::Exp::zero());
-        b.table.push(TypeV::Float, math::Log::zero());
-        b.table.push(TypeV::Float, math::Abs::zero());
-        return b;
+    pub struct FloatFnTable {
+        pub table: BuilderTable,
     }
-}
+
+    impl FloatFnTable {
+        pub fn new() -> Self {
+            let mut b = Self {
+                table: BuilderTable::new(),
+            };
+            b.table.push(TypeV::Float, math::Sin::zero());
+            b.table.push(TypeV::Float, math::Cos::zero());
+            b.table.push(TypeV::Float, math::Tan::zero());
+            b.table.push(TypeV::Float, math::Exp::zero());
+            b.table.push(TypeV::Float, math::Log::zero());
+            b.table.push(TypeV::Float, math::Abs::zero());
+            return b;
+        }
+    }
 }
 /*
             cmp::Eq::new(Val::new(Type::int(0)), Val::new(Type::int(0))),
