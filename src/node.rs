@@ -1,6 +1,5 @@
 use rand;
 use rand::{thread_rng, Rng};
-use std::collections::HashMap;
 
 pub trait Randomize {
     fn random(rtype: TypeV) -> Self;
