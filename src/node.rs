@@ -1260,20 +1260,28 @@ pub mod btables {
             b.table.push(TypeV::Float, math::Exp::zero());
             b.table.push(TypeV::Float, math::Log::zero());
             b.table.push(TypeV::Float, math::Abs::zero());
+            b.table.push(
+                TypeV::Float,
+                ops::Add::zero(TypeV::Float, vec![TypeV::Float, TypeV::Float]),
+            );
+            b.table.push(
+                TypeV::Float,
+                ops::Sub::zero(TypeV::Float, vec![TypeV::Float, TypeV::Float]),
+            );
+            b.table.push(
+                TypeV::Float,
+                ops::Mul::zero(TypeV::Float, vec![TypeV::Float, TypeV::Float]),
+            );
+            b.table.push(
+                TypeV::Float,
+                ops::Div::zero(TypeV::Float, vec![TypeV::Float, TypeV::Float]),
+            );
+            b.table.push(
+                TypeV::Float,
+                ops::Pow::zero(TypeV::Float, vec![TypeV::Float, TypeV::Float]),
+            );
+
             return b;
         }
     }
 }
-/*
-            cmp::Eq::new(Val::new(Type::int(0)), Val::new(Type::int(0))),
-            cmp::NEq::new(Val::new(Type::int(0)), Val::new(Type::int(0))),
-            cmp::Gt::new(Val::new(Type::int(0)), Val::new(Type::int(0))),
-            cmp::Gte::new(Val::new(Type::int(0)), Val::new(Type::int(0))),
-            cmp::Lt::new(Val::new(Type::int(0)), Val::new(Type::int(0))),
-            cmp::Lte::new(Val::new(Type::int(0)), Val::new(Type::int(0))),
-            misc::Cond::new(
-                Val::new(Type::bool(false)),
-                Val::new(Type::int(0)),
-                Val::new(Type::int(0)),
-            ),
-*/
