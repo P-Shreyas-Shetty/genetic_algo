@@ -1,8 +1,7 @@
 mod node;
-use node::cmp::Eq;
-use node::ops::{Add, Mul};
-use node::Node;
-use node::{Type, TypeV, Val};
+use node::base::{BuilderParams, Type, TypeV, Val};
+use node::cmp_nodes::Eq;
+use node::op_nodes::{Add, Mul};
 
 fn main() {
     let v0 = Val::new(Type::int(0));
@@ -14,4 +13,20 @@ fn main() {
     let e2 = Eq::new(e1, v3);
     let args_list: &[Type] = &[];
     println!("{}\n={}", e2.to_str(0), e2.eval(args_list),);
+    let mut params = BuilderParams::new().max_depth(5);
+    let table = node::btables::FloatFnTable::new().table;
+    let root = table
+        .get_rand_node(0, TypeV::Float, &mut params)
+        .build_random_node(
+            &table,
+            &[TypeV::Float, TypeV::Float],
+            TypeV::Float,
+            0,
+            &mut params,
+        );
+    println!(
+        "Random tree\n{}\nResult={}",
+        root.to_str(0),
+        root.eval(&[Type::Float(0.0), Type::Float(1.0)])
+    );
 }
