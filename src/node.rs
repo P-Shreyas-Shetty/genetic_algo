@@ -1,4 +1,5 @@
 use rand;
+use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
 
 pub trait Randomize {
@@ -98,7 +99,16 @@ pub trait Node {
     fn to_str(&self, indent: usize) -> String;
     fn get_rtype(&self) -> TypeV;
     fn get_arg_types(&self) -> &[TypeV];
+    fn set_child(&mut self, child_index: usize, child: NodeRef);
     fn get_type_zero(&self) -> NodeRef;
+    fn build_random_node<'a>(
+        &self,
+        build_table: &'a BuilderTable,
+        arg_types: &[TypeV],
+        node_rtype: TypeV,
+        depth: usize,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef;
 }
 
 /// Special FnNode trait for function node
@@ -141,6 +151,19 @@ impl Node for Null {
     }
     fn get_type_zero(&self) -> NodeRef {
         Null::zero(self.rtype)
+    }
+    fn set_child(&mut self, child_index: usize, child: NodeRef) {
+        panic!("Cannot set child node for Null node!!");
+    }
+    fn build_random_node<'a>(
+        &self,
+        build_table: &'a BuilderTable,
+        arg_types: &[TypeV],
+        node_rtype: TypeV,
+        depth: usize,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        Null::zero(node_rtype)
     }
 }
 
@@ -205,8 +228,22 @@ impl Node for Val {
     fn get_arg_types(&self) -> &[TypeV] {
         return &self.arg_types;
     }
+    fn set_child(&mut self, child_index: usize, child: NodeRef) {
+        panic!("Cannot set child node for Val node!!");
+    }
     fn get_type_zero(&self) -> NodeRef {
         Self::zero(self.rtype)
+    }
+    fn build_random_node<'a>(
+        &self,
+        build_table: &'a BuilderTable,
+        arg_types: &[TypeV],
+        node_rtype: TypeV,
+        depth: usize,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        let val = Randomize::random(node_rtype);
+        Val::new(val)
     }
 }
 
@@ -239,8 +276,25 @@ impl Node for Var {
     fn get_arg_types(&self) -> &[TypeV] {
         return &self.arg_types;
     }
+    fn set_child(&mut self, child_index: usize, child: NodeRef) {
+        panic!("Cannot set child node for Var node!!");
+    }
     fn get_type_zero(&self) -> NodeRef {
         Self::new(0, self.rtype)
+    }
+    fn build_random_node<'a>(
+        &self,
+        build_table: &'a BuilderTable,
+        arg_types: &[TypeV],
+        node_rtype: TypeV,
+        depth: usize,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        let valid_indices: Vec<_> = (0..arg_types.len())
+            .filter(|x| arg_types[*x] == node_rtype) //Only arguments with same type as rtype are to be chosen
+            .collect();
+        let vindex = *valid_indices.choose(&mut rand::thread_rng()).unwrap();
+        return Var::new(vindex, node_rtype);
     }
 }
 
@@ -298,8 +352,36 @@ pub mod ops {
         fn get_arg_types(&self) -> &[TypeV] {
             return &&self.arg_types;
         }
+
+        fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            match child_index {
+                0 => self.lhs = child,
+                1 => self.rhs = child,
+                _ => unreachable!(),
+            }
+        }
+
         fn get_type_zero(&self) -> NodeRef {
             Self::zero(self.rtype, self.arg_types.clone())
+        }
+        fn build_random_node<'a>(
+            &self,
+            build_table: &'a BuilderTable,
+            arg_types: &[TypeV],
+            node_rtype: TypeV,
+            depth: usize,
+            params: &'a mut BuilderParams,
+        ) -> NodeRef {
+            let mut node = Self::get_type_zero(self);
+            let lhs = build_table
+                .get_rand_node(depth, node_rtype, params)
+                .build_random_node(build_table, arg_types, node_rtype, depth - 1, params);
+            let rhs = build_table
+                .get_rand_node(depth, node_rtype, params)
+                .build_random_node(build_table, arg_types, node_rtype, depth - 1, params);
+            node.set_child(0, lhs);
+            node.set_child(1, rhs);
+            node
         }
     }
 
@@ -355,8 +437,34 @@ pub mod ops {
         fn get_arg_types(&self) -> &[TypeV] {
             return &self.arg_types;
         }
+        fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            match child_index {
+                0 => self.lhs = child,
+                1 => self.rhs = child,
+                _ => unreachable!(),
+            }
+        }
         fn get_type_zero(&self) -> NodeRef {
             Self::zero(self.rtype, self.arg_types.clone())
+        }
+        fn build_random_node<'a>(
+            &self,
+            build_table: &'a BuilderTable,
+            arg_types: &[TypeV],
+            node_rtype: TypeV,
+            depth: usize,
+            params: &'a mut BuilderParams,
+        ) -> NodeRef {
+            let mut node = Self::get_type_zero(self);
+            let lhs = build_table
+                .get_rand_node(depth, node_rtype, params)
+                .build_random_node(build_table, arg_types, node_rtype, depth - 1, params);
+            let rhs = build_table
+                .get_rand_node(depth, node_rtype, params)
+                .build_random_node(build_table, arg_types, node_rtype, depth - 1, params);
+            node.set_child(0, lhs);
+            node.set_child(1, rhs);
+            node
         }
     }
 
@@ -412,8 +520,34 @@ pub mod ops {
         fn get_arg_types(&self) -> &[TypeV] {
             return &self.arg_types;
         }
+        fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            match child_index {
+                0 => self.lhs = child,
+                1 => self.rhs = child,
+                _ => unreachable!(),
+            }
+        }
         fn get_type_zero(&self) -> NodeRef {
             Self::zero(self.rtype, self.arg_types.clone())
+        }
+        fn build_random_node<'a>(
+            &self,
+            build_table: &'a BuilderTable,
+            arg_types: &[TypeV],
+            node_rtype: TypeV,
+            depth: usize,
+            params: &'a mut BuilderParams,
+        ) -> NodeRef {
+            let mut node = Self::get_type_zero(self);
+            let lhs = build_table
+                .get_rand_node(depth, node_rtype, params)
+                .build_random_node(build_table, arg_types, node_rtype, depth - 1, params);
+            let rhs = build_table
+                .get_rand_node(depth, node_rtype, params)
+                .build_random_node(build_table, arg_types, node_rtype, depth - 1, params);
+            node.set_child(0, lhs);
+            node.set_child(1, rhs);
+            node
         }
     }
 
@@ -472,8 +606,34 @@ pub mod ops {
         fn get_arg_types(&self) -> &[TypeV] {
             return &self.arg_types;
         }
+        fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            match child_index {
+                0 => self.lhs = child,
+                1 => self.rhs = child,
+                _ => unreachable!(),
+            }
+        }
         fn get_type_zero(&self) -> NodeRef {
             Self::zero(self.rtype, self.arg_types.clone())
+        }
+        fn build_random_node<'a>(
+            &self,
+            build_table: &'a BuilderTable,
+            arg_types: &[TypeV],
+            node_rtype: TypeV,
+            depth: usize,
+            params: &'a mut BuilderParams,
+        ) -> NodeRef {
+            let mut node = Self::get_type_zero(self);
+            let lhs = build_table
+                .get_rand_node(depth, node_rtype, params)
+                .build_random_node(build_table, arg_types, node_rtype, depth - 1, params);
+            let rhs = build_table
+                .get_rand_node(depth, node_rtype, params)
+                .build_random_node(build_table, arg_types, node_rtype, depth - 1, params);
+            node.set_child(0, lhs);
+            node.set_child(1, rhs);
+            node
         }
     }
     pub struct Pow {
@@ -531,9 +691,32 @@ pub mod ops {
         fn get_arg_types(&self) -> &[TypeV] {
             return &self.arg_types;
         }
+        fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            match child_index {
+                0 => self.lhs = child,
+                1 => self.rhs = child,
+                _ => unreachable!(),
+            }
+        }
         fn get_type_zero(&self) -> NodeRef {
             Self::zero(self.rtype, self.arg_types.clone())
         }
+        fn build_random_node<'a>(
+            &self,
+            build_table: &'a BuilderTable,
+            arg_types: &[TypeV],
+            node_rtype: TypeV,
+            depth: usize,
+            params: &'a mut BuilderParams,
+        ) -> NodeRef {
+            let mut node = Self::get_type_zero(self);
+            let lhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            let rhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            node.set_child(0, lhs);
+            node.set_child(1, rhs);
+            node
+        }
+        
     }
 }
 pub mod logic {
@@ -589,9 +772,32 @@ pub mod logic {
         fn get_arg_types(&self) -> &[TypeV] {
             return &self.arg_types;
         }
+        fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            match child_index {
+                0 => self.lhs = child,
+                1 => self.rhs = child,
+                _ => unreachable!(),
+            }
+        }
         fn get_type_zero(&self) -> NodeRef {
             Self::zero(self.rtype, self.arg_types.clone())
         }
+        fn build_random_node<'a>(
+            &self,
+            build_table: &'a BuilderTable,
+            arg_types: &[TypeV],
+            node_rtype: TypeV,
+            depth: usize,
+            params: &'a mut BuilderParams,
+        ) -> NodeRef {
+            let mut node = Self::get_type_zero(self);
+            let lhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            let rhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            node.set_child(0, lhs);
+            node.set_child(1, rhs);
+            node
+        }
+        
     }
 
     pub struct Or {
@@ -645,8 +851,30 @@ pub mod logic {
         fn get_arg_types(&self) -> &[TypeV] {
             return &self.arg_types;
         }
+        fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            match child_index {
+                0 => self.lhs = child,
+                1 => self.rhs = child,
+                _ => unreachable!(),
+            }
+        }
         fn get_type_zero(&self) -> NodeRef {
             Self::zero(self.rtype, self.arg_types.clone())
+        }
+        fn build_random_node<'a>(
+            &self,
+            build_table: &'a BuilderTable,
+            arg_types: &[TypeV],
+            node_rtype: TypeV,
+            depth: usize,
+            params: &'a mut BuilderParams,
+        ) -> NodeRef {
+            let mut node = Self::get_type_zero(self);
+            let lhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            let rhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            node.set_child(0, lhs);
+            node.set_child(1, rhs);
+            node
         }
     }
 
@@ -692,9 +920,29 @@ pub mod logic {
         fn get_arg_types(&self) -> &[TypeV] {
             return &self.arg_types;
         }
+        fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            match child_index {
+                0 => self.rhs = child,
+                _ => unreachable!(),
+            }
+        }
         fn get_type_zero(&self) -> NodeRef {
             Self::zero(self.rtype, self.arg_types.clone())
         }
+        fn build_random_node<'a>(
+            &self,
+            build_table: &'a BuilderTable,
+            arg_types: &[TypeV],
+            node_rtype: TypeV,
+            depth: usize,
+            params: &'a mut BuilderParams,
+        ) -> NodeRef {
+            let mut node = Self::get_type_zero(self);
+            let rhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            node.set_child(0, rhs);
+            node
+        }
+        
     }
 }
 
@@ -759,8 +1007,30 @@ pub mod cmp {
         fn get_arg_types(&self) -> &[TypeV] {
             return &self.arg_types;
         }
+        fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            match child_index {
+                0 => self.lhs = child,
+                1 => self.rhs = child,
+                _ => unreachable!(),
+            }
+        }
         fn get_type_zero(&self) -> NodeRef {
             Self::zero(self.rtype, self.arg_types.clone())
+        }
+        fn build_random_node<'a>(
+            &self,
+            build_table: &'a BuilderTable,
+            arg_types: &[TypeV],
+            node_rtype: TypeV,
+            depth: usize,
+            params: &'a mut BuilderParams,
+        ) -> NodeRef {
+            let mut node = Self::get_type_zero(self);
+            let lhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            let rhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            node.set_child(0, lhs);
+            node.set_child(1, rhs);
+            node
         }
     }
 
@@ -823,9 +1093,32 @@ pub mod cmp {
         fn get_arg_types(&self) -> &[TypeV] {
             return &self.arg_types;
         }
+        fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            match child_index {
+                0 => self.lhs = child,
+                1 => self.rhs = child,
+                _ => unreachable!(),
+            }
+        }
         fn get_type_zero(&self) -> NodeRef {
             Self::zero(self.rtype, self.arg_types.clone())
         }
+        fn build_random_node<'a>(
+            &self,
+            build_table: &'a BuilderTable,
+            arg_types: &[TypeV],
+            node_rtype: TypeV,
+            depth: usize,
+            params: &'a mut BuilderParams,
+        ) -> NodeRef {
+            let mut node = Self::get_type_zero(self);
+            let lhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            let rhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            node.set_child(0, lhs);
+            node.set_child(1, rhs);
+            node
+        }
+       
     }
 
     pub struct Gt {
@@ -886,9 +1179,32 @@ pub mod cmp {
         fn get_arg_types(&self) -> &[TypeV] {
             return &self.arg_types;
         }
+        fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            match child_index {
+                0 => self.lhs = child,
+                1 => self.rhs = child,
+                _ => unreachable!(),
+            }
+        }
         fn get_type_zero(&self) -> NodeRef {
             Self::zero(self.rtype, self.arg_types.clone())
         }
+        fn build_random_node<'a>(
+            &self,
+            build_table: &'a BuilderTable,
+            arg_types: &[TypeV],
+            node_rtype: TypeV,
+            depth: usize,
+            params: &'a mut BuilderParams,
+        ) -> NodeRef {
+            let mut node = Self::get_type_zero(self);
+            let lhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            let rhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            node.set_child(0, lhs);
+            node.set_child(1, rhs);
+            node
+        }
+       
     }
 
     pub struct Gte {
@@ -949,9 +1265,32 @@ pub mod cmp {
         fn get_arg_types(&self) -> &[TypeV] {
             return &self.arg_types;
         }
+        fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            match child_index {
+                0 => self.lhs = child,
+                1 => self.rhs = child,
+                _ => unreachable!(),
+            }
+        }
         fn get_type_zero(&self) -> NodeRef {
             Self::zero(self.rtype, self.arg_types.clone())
         }
+       fn build_random_node<'a>(
+            &self,
+            build_table: &'a BuilderTable,
+            arg_types: &[TypeV],
+            node_rtype: TypeV,
+            depth: usize,
+            params: &'a mut BuilderParams,
+        ) -> NodeRef {
+            let mut node = Self::get_type_zero(self);
+            let lhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            let rhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            node.set_child(0, lhs);
+            node.set_child(1, rhs);
+            node
+        }
+        
     }
 
     pub struct Lt {
@@ -1012,9 +1351,32 @@ pub mod cmp {
         fn get_arg_types(&self) -> &[TypeV] {
             return &self.arg_types;
         }
+        fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            match child_index {
+                0 => self.lhs = child,
+                1 => self.rhs = child,
+                _ => unreachable!(),
+            }
+        }
         fn get_type_zero(&self) -> NodeRef {
             Self::zero(self.rtype, self.arg_types.clone())
         }
+        fn build_random_node<'a>(
+            &self,
+            build_table: &'a BuilderTable,
+            arg_types: &[TypeV],
+            node_rtype: TypeV,
+            depth: usize,
+            params: &'a mut BuilderParams,
+        ) -> NodeRef {
+            let mut node = Self::get_type_zero(self);
+            let lhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            let rhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            node.set_child(0, lhs);
+            node.set_child(1, rhs);
+            node
+        }
+        
     }
 
     pub struct Lte {
@@ -1075,9 +1437,31 @@ pub mod cmp {
         fn get_arg_types(&self) -> &[TypeV] {
             return &self.arg_types;
         }
+        fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            match child_index {
+                0 => self.lhs = child,
+                1 => self.rhs = child,
+                _ => unreachable!(),
+            }
+        }
         fn get_type_zero(&self) -> NodeRef {
             Self::zero(self.rtype, self.arg_types.clone())
+        }fn build_random_node<'a>(
+            &self,
+            build_table: &'a BuilderTable,
+            arg_types: &[TypeV],
+            node_rtype: TypeV,
+            depth: usize,
+            params: &'a mut BuilderParams,
+        ) -> NodeRef {
+            let mut node = Self::get_type_zero(self);
+            let lhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            let rhs = build_table.get_rand_node(depth, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            node.set_child(0, lhs);
+            node.set_child(1, rhs);
+            node
         }
+        
     }
 }
 
@@ -1140,8 +1524,34 @@ pub mod misc {
         fn get_arg_types(&self) -> &[TypeV] {
             return &self.arg_types;
         }
+        fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            match child_index {
+                0 => self.cond = child,
+                1 => self.iftrue = child,
+                2 => self.iffalse = child,
+                _ => unreachable!(),
+            }
+        }
         fn get_type_zero(&self) -> NodeRef {
             Self::zero(self.rtype, self.arg_types.clone())
+        }
+
+        fn build_random_node<'a>(
+            &self,
+            build_table: &'a BuilderTable,
+            arg_types: &[TypeV],
+            node_rtype: TypeV,
+            depth: usize,
+            params: &'a mut BuilderParams,
+        ) -> NodeRef {
+            let mut node = Self::get_type_zero(self);
+            let cond = build_table.get_rand_node(depth - 1, TypeV::Bool, params).build_random_node(build_table, arg_types, TypeV::Bool, depth-1, params);
+            let iftrue = build_table.get_rand_node(depth - 1, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            let iffalse = build_table.get_rand_node(depth - 1, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+            node.set_child(0, cond);
+            node.set_child(1, iftrue);
+            node.set_child(1, iffalse);
+            node
         }
     }
 }
@@ -1186,8 +1596,27 @@ pub mod math {
                 fn get_arg_types(&self) -> &[TypeV] {
                     return &self.arg_types;
                 }
+                fn set_child(&mut self, child_index: usize, child: NodeRef) {
+                    match child_index {
+                        0 => self.arg = child,
+                        _ => unreachable!(),
+                    }
+                }
                 fn get_type_zero(&self) -> NodeRef {
                     Self::zero()
+                }
+                fn build_random_node<'a>(
+                    &self,
+                    build_table: &'a BuilderTable,
+                    arg_types: &[TypeV],
+                    node_rtype: TypeV,
+                    depth: usize,
+                    params: &'a mut BuilderParams,
+                ) -> NodeRef {
+                    let mut node = Self::get_type_zero(self);
+                    let arg = build_table.get_rand_node(depth - 1, node_rtype, params).build_random_node(build_table, arg_types, node_rtype, depth-1, params);
+                    node.set_child(0, arg);
+                    node
                 }
             }
 
@@ -1220,6 +1649,56 @@ pub struct BuilderTable {
     rtype_int: Vec<NodeRef>,
     rtype_uint: Vec<NodeRef>,
     rtype_float: Vec<NodeRef>,
+    val_node: NodeRef,
+    var_node: NodeRef,
+}
+
+pub struct BuilderParams {
+    max_depth: usize,
+    randomizer: rand::prelude::ThreadRng,
+    termination_probability: f32,
+    float_range: (f32, f32),
+    int_range: (i32, i32),
+    uint_range: (u32, u32),
+}
+
+/// Builder pattern for BuilderParams
+impl BuilderParams {
+    pub fn new() -> BuilderParams {
+        BuilderParams {
+            max_depth: 10,                 //Set this value as default
+            termination_probability: 0.05, //set early termination probabilty as 5% in the beginning
+            float_range: (0.0, 1.0),
+            int_range: (-100, 100),
+            uint_range: (0, 100),
+            randomizer: thread_rng(),
+        }
+    }
+
+    pub fn max_depth(mut self, val: usize) -> Self {
+        self.max_depth = val;
+        self
+    }
+
+    pub fn termination_probability(mut self, val: f32) -> Self {
+        self.termination_probability = val;
+        self
+    }
+
+    pub fn float_range(mut self, a: f32, b: f32) -> Self {
+        self.float_range = (a, b);
+        self
+    }
+
+    pub fn int_range(mut self, a: i32, b: i32) -> Self {
+        self.int_range = (a, b);
+        self
+    }
+
+    pub fn uint_range(mut self, a: u32, b: u32) -> Self {
+        self.uint_range = (a, b);
+        self
+    }
 }
 
 impl BuilderTable {
@@ -1229,6 +1708,8 @@ impl BuilderTable {
             rtype_int: vec![],
             rtype_uint: vec![],
             rtype_float: vec![],
+            val_node: Val::zero(TypeV::Bool),
+            var_node: Var::new(0, TypeV::Bool),
         }
     }
 
@@ -1240,10 +1721,36 @@ impl BuilderTable {
             TypeV::Float => self.rtype_float.push(node),
         }
     }
+
+    pub fn get_rand_node<'a>(
+        &self,
+        depth: usize,
+        rtype: TypeV,
+        params: &'a mut BuilderParams,
+    ) -> &NodeRef {
+        if (params.randomizer.gen::<f32>() <= params.termination_probability)
+            || (depth == params.max_depth)
+        {
+            if params.randomizer.gen::<f32>() <= 0.5 {
+                &self.val_node
+            } else {
+                &self.var_node
+            }
+        } else {
+            return match rtype {
+                TypeV::Bool => self.rtype_bool.choose(&mut params.randomizer).unwrap(),
+                TypeV::Int => self.rtype_int.choose(&mut params.randomizer).unwrap(),
+                TypeV::UInt => self.rtype_uint.choose(&mut params.randomizer).unwrap(),
+                TypeV::Float => self.rtype_float.choose(&mut params.randomizer).unwrap(),
+            };
+        }
+    }
 }
 
 pub mod btables {
     use super::*;
+
+    /// function table for floating point numbers
     pub struct FloatFnTable {
         pub table: BuilderTable,
     }
