@@ -91,4 +91,26 @@ impl Node for Cond {
         node.set_child(1, iffalse);
         node
     }
+    fn type_check(&self) -> Result<(), TypeErr> {
+        if (self.cond.get_rtype() == TypeV::Bool)
+            && (self.iftrue.get_rtype() == self.rtype)
+            && (self.iffalse.get_rtype() == self.rtype)
+        {
+            if let Err(err) = self.cond.type_check() {
+                return Err(err);
+            } else {
+                if let Err(err) = self.iftrue.type_check() {
+                    return Err(err);
+                } else {
+                    if let Err(err) = self.iffalse.type_check() {
+                        return Err(err);
+                    } else {
+                        return Ok(());
+                    }
+                }
+            }
+        } else {
+            return Err(TypeErr {msg: format!("Cond required argument of type ({:#?}, {:#?}, {:#?}); Got ({:#?}, {:#?}, {:#?})!!", TypeV::Bool, self.rtype, self.rtype, self.cond.get_rtype(), self.iftrue.get_rtype(), self.iffalse.get_rtype())});
+        }
+    }
 }

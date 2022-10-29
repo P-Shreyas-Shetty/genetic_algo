@@ -29,4 +29,9 @@ fn main() {
         root.to_str(0),
         root.eval(&[Type::Float(0.0), Type::Float(1.0)])
     );
+    if let Err(e) = root.type_check() {
+        println!("Err: {}", e.msg)
+    } else {
+        println!("Type check passed!")
+    }
 }

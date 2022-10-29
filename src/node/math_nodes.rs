@@ -58,6 +58,20 @@ macro_rules! single_arg_fn_node_def {
                 node.set_child(0, arg);
                 node
             }
+            fn type_check(&self) -> Result<(), TypeErr> {
+                if self.arg.get_rtype() == TypeV::Float {
+                    return self.arg.type_check();
+                } else {
+                    return Err(TypeErr {
+                        msg: format!(
+                            "{} required argument of type {:#?}; Got {:#?}!!",
+                            stringify!($type_name),
+                            TypeV::Float,
+                            self.arg.get_rtype()
+                        ),
+                    });
+                }
+            }
         }
 
         impl FnNode for $type_name {

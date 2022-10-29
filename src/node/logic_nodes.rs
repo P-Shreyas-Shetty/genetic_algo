@@ -79,6 +79,29 @@ impl Node for And {
         node.set_child(1, rhs);
         node
     }
+    fn type_check(&self) -> Result<(), TypeErr> {
+        if (self.lhs.get_rtype() == TypeV::Bool) && (self.rhs.get_rtype() == TypeV::Bool) {
+            if let Err(err) = self.lhs.type_check() {
+                return Err(err);
+            } else {
+                if let Err(err) = self.rhs.type_check() {
+                    return Err(err);
+                } else {
+                    return Ok(());
+                }
+            }
+        } else {
+            return Err(TypeErr {
+                msg: format!(
+                    "And required argument of type ({:#?}, {:#?}); Got ({:#?}, {:#?})!!",
+                    TypeV::Bool,
+                    TypeV::Bool,
+                    self.lhs.get_rtype(),
+                    self.rhs.get_rtype()
+                ),
+            });
+        }
+    }
 }
 
 pub struct Or {
@@ -161,6 +184,29 @@ impl Node for Or {
         node.set_child(1, rhs);
         node
     }
+    fn type_check(&self) -> Result<(), TypeErr> {
+        if (self.lhs.get_rtype() == TypeV::Bool) && (self.rhs.get_rtype() == TypeV::Bool) {
+            if let Err(err) = self.lhs.type_check() {
+                return Err(err);
+            } else {
+                if let Err(err) = self.rhs.type_check() {
+                    return Err(err);
+                } else {
+                    return Ok(());
+                }
+            }
+        } else {
+            return Err(TypeErr {
+                msg: format!(
+                    "Or required argument of type ({:#?}, {:#?}); Got ({:#?}, {:#?})!!",
+                    TypeV::Bool,
+                    TypeV::Bool,
+                    self.lhs.get_rtype(),
+                    self.rhs.get_rtype()
+                ),
+            });
+        }
+    }
 }
 
 pub struct Not {
@@ -228,5 +274,26 @@ impl Node for Not {
             .build_random_node(build_table, arg_types, node_rtype, depth + 1, params);
         node.set_child(0, rhs);
         node
+    }
+    fn type_check(&self) -> Result<(), TypeErr> {
+        if self.rhs.get_rtype() == TypeV::Bool {
+            if let Err(err) = self.rhs.type_check() {
+                return Err(err);
+            } else {
+                if let Err(err) = self.rhs.type_check() {
+                    return Err(err);
+                } else {
+                    return Ok(());
+                }
+            }
+        } else {
+            return Err(TypeErr {
+                msg: format!(
+                    "Not required argument of type ({:#?}); Got ({:#?})!!",
+                    TypeV::Bool,
+                    self.rhs.get_rtype()
+                ),
+            });
+        }
     }
 }

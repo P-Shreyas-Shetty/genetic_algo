@@ -92,6 +92,10 @@ impl std::fmt::Display for Type {
 
 pub type NodeRef = Box<dyn Node>;
 
+pub struct TypeErr {
+    pub msg: String,
+}
+
 /// This is the top level Node trait
 pub trait Node {
     /// each node is evaluated and value is passed up the tree
@@ -109,6 +113,7 @@ pub trait Node {
         depth: usize,
         params: &'a mut BuilderParams,
     ) -> NodeRef;
+    fn type_check(&self) -> Result<(), TypeErr>;
 }
 
 /// Special FnNode trait for function node
@@ -164,6 +169,11 @@ impl Node for Null {
         params: &'a mut BuilderParams,
     ) -> NodeRef {
         Null::zero(node_rtype)
+    }
+    fn type_check(&self) -> Result<(), TypeErr> {
+        Err(TypeErr {
+            msg: "Null node is invalid!!".to_string(),
+        })
     }
 }
 
@@ -245,6 +255,9 @@ impl Node for Val {
         let val = Randomize::random(node_rtype);
         Val::new(val)
     }
+    fn type_check(&self) -> Result<(), TypeErr> {
+        Ok(())
+    }
 }
 
 pub struct Var {
@@ -295,6 +308,9 @@ impl Node for Var {
             .collect();
         let vindex = *valid_indices.choose(&mut rand::thread_rng()).unwrap();
         return Var::new(vindex, node_rtype);
+    }
+    fn type_check(&self) -> Result<(), TypeErr> {
+        Ok(())
     }
 }
 

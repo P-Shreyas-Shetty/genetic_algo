@@ -83,6 +83,31 @@ impl Node for Add {
         node.set_child(1, rhs);
         node
     }
+    fn type_check(&self) -> Result<(), TypeErr> {
+        if (self.lhs.get_rtype() == self.arg_types[0])
+            && (self.rhs.get_rtype() == self.arg_types[1])
+        {
+            if let Err(err) = self.lhs.type_check() {
+                return Err(err);
+            } else {
+                if let Err(err) = self.rhs.type_check() {
+                    return Err(err);
+                } else {
+                    return Ok(());
+                }
+            }
+        } else {
+            return Err(TypeErr {
+                msg: format!(
+                    "Add required argument of type ({:#?}, {:#?}); Got ({:#?}, {:#?})!!",
+                    self.arg_types[0],
+                    self.arg_types[1],
+                    self.lhs.get_rtype(),
+                    self.rhs.get_rtype()
+                ),
+            });
+        }
+    }
 }
 
 pub struct Sub {
@@ -166,6 +191,31 @@ impl Node for Sub {
         node.set_child(1, rhs);
         node
     }
+    fn type_check(&self) -> Result<(), TypeErr> {
+        if (self.lhs.get_rtype() == self.arg_types[0])
+            && (self.rhs.get_rtype() == self.arg_types[1])
+        {
+            if let Err(err) = self.lhs.type_check() {
+                return Err(err);
+            } else {
+                if let Err(err) = self.rhs.type_check() {
+                    return Err(err);
+                } else {
+                    return Ok(());
+                }
+            }
+        } else {
+            return Err(TypeErr {
+                msg: format!(
+                    "Sub required argument of type ({:#?}, {:#?}); Got ({:#?}, {:#?})!!",
+                    self.arg_types[0],
+                    self.arg_types[1],
+                    self.lhs.get_rtype(),
+                    self.rhs.get_rtype()
+                ),
+            });
+        }
+    }
 }
 
 pub struct Mul {
@@ -248,6 +298,31 @@ impl Node for Mul {
         node.set_child(0, lhs);
         node.set_child(1, rhs);
         node
+    }
+    fn type_check(&self) -> Result<(), TypeErr> {
+        if (self.lhs.get_rtype() == self.arg_types[0])
+            && (self.rhs.get_rtype() == self.arg_types[1])
+        {
+            if let Err(err) = self.lhs.type_check() {
+                return Err(err);
+            } else {
+                if let Err(err) = self.rhs.type_check() {
+                    return Err(err);
+                } else {
+                    return Ok(());
+                }
+            }
+        } else {
+            return Err(TypeErr {
+                msg: format!(
+                    "Mul required argument of type ({:#?}, {:#?}); Got ({:#?}, {:#?})!!",
+                    self.arg_types[0],
+                    self.arg_types[1],
+                    self.lhs.get_rtype(),
+                    self.rhs.get_rtype()
+                ),
+            });
+        }
     }
 }
 
@@ -335,6 +410,31 @@ impl Node for Div {
         node.set_child(1, rhs);
         node
     }
+    fn type_check(&self) -> Result<(), TypeErr> {
+        if (self.lhs.get_rtype() == self.arg_types[0])
+            && (self.rhs.get_rtype() == self.arg_types[1])
+        {
+            if let Err(err) = self.lhs.type_check() {
+                return Err(err);
+            } else {
+                if let Err(err) = self.rhs.type_check() {
+                    return Err(err);
+                } else {
+                    return Ok(());
+                }
+            }
+        } else {
+            return Err(TypeErr {
+                msg: format!(
+                    "Div required argument of type ({:#?}, {:#?}); Got ({:#?}, {:#?})!!",
+                    self.arg_types[0],
+                    self.arg_types[1],
+                    self.lhs.get_rtype(),
+                    self.rhs.get_rtype()
+                ),
+            });
+        }
+    }
 }
 pub struct Pow {
     pub rtype: TypeV,
@@ -419,5 +519,30 @@ impl Node for Pow {
         node.set_child(0, lhs);
         node.set_child(1, rhs);
         node
+    }
+    fn type_check(&self) -> Result<(), TypeErr> {
+        if (self.lhs.get_rtype() == self.arg_types[0])
+            && (self.rhs.get_rtype() == self.arg_types[1])
+        {
+            if let Err(err) = self.lhs.type_check() {
+                return Err(err);
+            } else {
+                if let Err(err) = self.rhs.type_check() {
+                    return Err(err);
+                } else {
+                    return Ok(());
+                }
+            }
+        } else {
+            return Err(TypeErr {
+                msg: format!(
+                    "Pow required argument of type ({:#?}, {:#?}); Got ({:#?}, {:#?})!!",
+                    self.arg_types[0],
+                    self.arg_types[1],
+                    self.lhs.get_rtype(),
+                    self.rhs.get_rtype()
+                ),
+            });
+        }
     }
 }
