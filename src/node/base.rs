@@ -314,12 +314,6 @@ impl Node for Var {
     }
 }
 
-pub struct Tree {
-    root: NodeRef,
-    arg_type: Vec<TypeV>,
-    rtype: TypeV,
-}
-
 pub struct BuilderTable {
     rtype_bool: Vec<NodeRef>,
     rtype_int: Vec<NodeRef>,
