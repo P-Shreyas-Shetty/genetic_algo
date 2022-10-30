@@ -1,4 +1,5 @@
 use super::base::*;
+use rand::Rng;
 
 pub struct Eq {
     pub rtype: TypeV,
@@ -41,14 +42,14 @@ impl Node for Eq {
         let l = self.lhs.eval(args);
         match (r, l) {
             (Type::Float(ri), Type::Float(li)) => Type::Bool(ri == li),
-            (Type::Float(ri), Type::Int(li)) => Type::Bool(ri == li as f64),
-            (Type::Float(ri), Type::UInt(li)) => Type::Bool(ri == li as f64),
+            (Type::Float(ri), Type::Int(li)) => Type::Bool(ri == li as f32),
+            (Type::Float(ri), Type::UInt(li)) => Type::Bool(ri == li as f32),
             (Type::Int(ri), Type::Int(li)) => Type::Bool(ri == li),
-            (Type::Int(ri), Type::UInt(li)) => Type::Bool(ri == li as i64),
-            (Type::Int(ri), Type::Float(li)) => Type::Bool(ri as f64 == li),
+            (Type::Int(ri), Type::UInt(li)) => Type::Bool(ri == li as i32),
+            (Type::Int(ri), Type::Float(li)) => Type::Bool(ri as f32 == li),
             (Type::UInt(ri), Type::UInt(li)) => Type::Bool(ri == li),
-            (Type::UInt(ri), Type::Int(li)) => Type::Bool(ri as i64 == li),
-            (Type::UInt(ri), Type::Float(li)) => Type::Bool(ri as f64 == li),
+            (Type::UInt(ri), Type::Int(li)) => Type::Bool(ri as i32 == li),
+            (Type::UInt(ri), Type::Float(li)) => Type::Bool(ri as f32 == li),
             (Type::Bool(ri), Type::Bool(li)) => Type::Bool(ri == li),
             _ => panic!("Invalid: Can't Compare {:?} with {:?}", r, l),
         }
@@ -113,6 +114,44 @@ impl Node for Eq {
             });
         }
     }
+    fn deep_copy(&self) -> NodeRef {
+        Self::new(self.rhs.deep_copy(), self.lhs.deep_copy())
+    }
+    fn mutant_copy<'a>(
+        &self,
+        probabilty: f32,
+        node_depth: usize,
+        arg_types: &[TypeV],
+        build_table: &'a BuilderTable,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        if params.randomizer.gen::<f32>() <= probabilty {
+            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+        } else {
+            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+            ret.set_child(
+                0,
+                self.lhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            ret.set_child(
+                1,
+                self.rhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            return ret;
+        }
+    }
 }
 
 pub struct NEq {
@@ -156,14 +195,14 @@ impl Node for NEq {
         let l = self.lhs.eval(args);
         match (r, l) {
             (Type::Float(ri), Type::Float(li)) => Type::Bool(ri != li),
-            (Type::Float(ri), Type::Int(li)) => Type::Bool(ri != li as f64),
-            (Type::Float(ri), Type::UInt(li)) => Type::Bool(ri != li as f64),
+            (Type::Float(ri), Type::Int(li)) => Type::Bool(ri != li as f32),
+            (Type::Float(ri), Type::UInt(li)) => Type::Bool(ri != li as f32),
             (Type::Int(ri), Type::Int(li)) => Type::Bool(ri != li),
-            (Type::Int(ri), Type::UInt(li)) => Type::Bool(ri != li as i64),
-            (Type::Int(ri), Type::Float(li)) => Type::Bool(ri as f64 != li),
+            (Type::Int(ri), Type::UInt(li)) => Type::Bool(ri != li as i32),
+            (Type::Int(ri), Type::Float(li)) => Type::Bool(ri as f32 != li),
             (Type::UInt(ri), Type::UInt(li)) => Type::Bool(ri != li),
-            (Type::UInt(ri), Type::Int(li)) => Type::Bool(ri as i64 != li),
-            (Type::UInt(ri), Type::Float(li)) => Type::Bool(ri as f64 != li),
+            (Type::UInt(ri), Type::Int(li)) => Type::Bool(ri as i32 != li),
+            (Type::UInt(ri), Type::Float(li)) => Type::Bool(ri as f32 != li),
             (Type::Bool(ri), Type::Bool(li)) => Type::Bool(ri != li),
             _ => panic!("Invalid: Can't Compare {:?} with {:?}", r, l),
         }
@@ -228,6 +267,44 @@ impl Node for NEq {
             });
         }
     }
+    fn deep_copy(&self) -> NodeRef {
+        Self::new(self.rhs.deep_copy(), self.lhs.deep_copy())
+    }
+    fn mutant_copy<'a>(
+        &self,
+        probabilty: f32,
+        node_depth: usize,
+        arg_types: &[TypeV],
+        build_table: &'a BuilderTable,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        if params.randomizer.gen::<f32>() <= probabilty {
+            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+        } else {
+            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+            ret.set_child(
+                0,
+                self.lhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            ret.set_child(
+                1,
+                self.rhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            return ret;
+        }
+    }
 }
 
 pub struct Gt {
@@ -271,14 +348,14 @@ impl Node for Gt {
         let l = self.lhs.eval(args);
         match (r, l) {
             (Type::Float(ri), Type::Float(li)) => Type::Bool(ri > li),
-            (Type::Float(ri), Type::Int(li)) => Type::Bool(ri > li as f64),
-            (Type::Float(ri), Type::UInt(li)) => Type::Bool(ri > li as f64),
+            (Type::Float(ri), Type::Int(li)) => Type::Bool(ri > li as f32),
+            (Type::Float(ri), Type::UInt(li)) => Type::Bool(ri > li as f32),
             (Type::Int(ri), Type::Int(li)) => Type::Bool(ri > li),
-            (Type::Int(ri), Type::UInt(li)) => Type::Bool(ri > li as i64),
-            (Type::Int(ri), Type::Float(li)) => Type::Bool(ri as f64 > li),
+            (Type::Int(ri), Type::UInt(li)) => Type::Bool(ri > li as i32),
+            (Type::Int(ri), Type::Float(li)) => Type::Bool(ri as f32 > li),
             (Type::UInt(ri), Type::UInt(li)) => Type::Bool(ri > li),
-            (Type::UInt(ri), Type::Int(li)) => Type::Bool(ri as i64 > li),
-            (Type::UInt(ri), Type::Float(li)) => Type::Bool(ri as f64 > li),
+            (Type::UInt(ri), Type::Int(li)) => Type::Bool(ri as i32 > li),
+            (Type::UInt(ri), Type::Float(li)) => Type::Bool(ri as f32 > li),
             _ => panic!("Invalid: Can't Compare {:?} with {:?}", r, l),
         }
     }
@@ -342,6 +419,44 @@ impl Node for Gt {
             });
         }
     }
+    fn deep_copy(&self) -> NodeRef {
+        Self::new(self.rhs.deep_copy(), self.lhs.deep_copy())
+    }
+    fn mutant_copy<'a>(
+        &self,
+        probabilty: f32,
+        node_depth: usize,
+        arg_types: &[TypeV],
+        build_table: &'a BuilderTable,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        if params.randomizer.gen::<f32>() <= probabilty {
+            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+        } else {
+            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+            ret.set_child(
+                0,
+                self.lhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            ret.set_child(
+                1,
+                self.rhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            return ret;
+        }
+    }
 }
 
 pub struct Gte {
@@ -385,14 +500,14 @@ impl Node for Gte {
         let l = self.lhs.eval(args);
         match (r, l) {
             (Type::Float(ri), Type::Float(li)) => Type::Bool(ri >= li),
-            (Type::Float(ri), Type::Int(li)) => Type::Bool(ri >= li as f64),
-            (Type::Float(ri), Type::UInt(li)) => Type::Bool(ri >= li as f64),
+            (Type::Float(ri), Type::Int(li)) => Type::Bool(ri >= li as f32),
+            (Type::Float(ri), Type::UInt(li)) => Type::Bool(ri >= li as f32),
             (Type::Int(ri), Type::Int(li)) => Type::Bool(ri >= li),
-            (Type::Int(ri), Type::UInt(li)) => Type::Bool(ri >= li as i64),
-            (Type::Int(ri), Type::Float(li)) => Type::Bool(ri as f64 >= li),
+            (Type::Int(ri), Type::UInt(li)) => Type::Bool(ri >= li as i32),
+            (Type::Int(ri), Type::Float(li)) => Type::Bool(ri as f32 >= li),
             (Type::UInt(ri), Type::UInt(li)) => Type::Bool(ri >= li),
-            (Type::UInt(ri), Type::Int(li)) => Type::Bool(ri as i64 >= li),
-            (Type::UInt(ri), Type::Float(li)) => Type::Bool(ri as f64 >= li),
+            (Type::UInt(ri), Type::Int(li)) => Type::Bool(ri as i32 >= li),
+            (Type::UInt(ri), Type::Float(li)) => Type::Bool(ri as f32 >= li),
             _ => panic!("Invalid: Can't Compare {:?} with {:?}", r, l),
         }
     }
@@ -456,6 +571,44 @@ impl Node for Gte {
             });
         }
     }
+    fn deep_copy(&self) -> NodeRef {
+        Self::new(self.rhs.deep_copy(), self.lhs.deep_copy())
+    }
+    fn mutant_copy<'a>(
+        &self,
+        probabilty: f32,
+        node_depth: usize,
+        arg_types: &[TypeV],
+        build_table: &'a BuilderTable,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        if params.randomizer.gen::<f32>() <= probabilty {
+            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+        } else {
+            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+            ret.set_child(
+                0,
+                self.lhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            ret.set_child(
+                1,
+                self.rhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            return ret;
+        }
+    }
 }
 
 pub struct Lt {
@@ -499,14 +652,14 @@ impl Node for Lt {
         let l = self.lhs.eval(args);
         match (r, l) {
             (Type::Float(ri), Type::Float(li)) => Type::Bool(ri < li),
-            (Type::Float(ri), Type::Int(li)) => Type::Bool(ri < li as f64),
-            (Type::Float(ri), Type::UInt(li)) => Type::Bool(ri < li as f64),
+            (Type::Float(ri), Type::Int(li)) => Type::Bool(ri < li as f32),
+            (Type::Float(ri), Type::UInt(li)) => Type::Bool(ri < li as f32),
             (Type::Int(ri), Type::Int(li)) => Type::Bool(ri < li),
-            (Type::Int(ri), Type::UInt(li)) => Type::Bool(ri < li as i64),
-            (Type::Int(ri), Type::Float(li)) => Type::Bool((ri as f64) < li),
+            (Type::Int(ri), Type::UInt(li)) => Type::Bool(ri < li as i32),
+            (Type::Int(ri), Type::Float(li)) => Type::Bool((ri as f32) < li),
             (Type::UInt(ri), Type::UInt(li)) => Type::Bool(ri < li),
-            (Type::UInt(ri), Type::Int(li)) => Type::Bool((ri as i64) < li),
-            (Type::UInt(ri), Type::Float(li)) => Type::Bool((ri as f64) < li),
+            (Type::UInt(ri), Type::Int(li)) => Type::Bool((ri as i32) < li),
+            (Type::UInt(ri), Type::Float(li)) => Type::Bool((ri as f32) < li),
             _ => panic!("Invalid: Can't Compare {:?} with {:?}", r, l),
         }
     }
@@ -570,6 +723,44 @@ impl Node for Lt {
             });
         }
     }
+    fn deep_copy(&self) -> NodeRef {
+        Self::new(self.rhs.deep_copy(), self.lhs.deep_copy())
+    }
+    fn mutant_copy<'a>(
+        &self,
+        probabilty: f32,
+        node_depth: usize,
+        arg_types: &[TypeV],
+        build_table: &'a BuilderTable,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        if params.randomizer.gen::<f32>() <= probabilty {
+            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+        } else {
+            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+            ret.set_child(
+                0,
+                self.lhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            ret.set_child(
+                1,
+                self.rhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            return ret;
+        }
+    }
 }
 
 pub struct Lte {
@@ -613,14 +804,14 @@ impl Node for Lte {
         let l = self.lhs.eval(args);
         match (r, l) {
             (Type::Float(ri), Type::Float(li)) => Type::Bool(ri <= li),
-            (Type::Float(ri), Type::Int(li)) => Type::Bool(ri <= li as f64),
-            (Type::Float(ri), Type::UInt(li)) => Type::Bool(ri <= li as f64),
+            (Type::Float(ri), Type::Int(li)) => Type::Bool(ri <= li as f32),
+            (Type::Float(ri), Type::UInt(li)) => Type::Bool(ri <= li as f32),
             (Type::Int(ri), Type::Int(li)) => Type::Bool(ri <= li),
-            (Type::Int(ri), Type::UInt(li)) => Type::Bool(ri <= li as i64),
-            (Type::Int(ri), Type::Float(li)) => Type::Bool((ri as f64) <= li),
+            (Type::Int(ri), Type::UInt(li)) => Type::Bool(ri <= li as i32),
+            (Type::Int(ri), Type::Float(li)) => Type::Bool((ri as f32) <= li),
             (Type::UInt(ri), Type::UInt(li)) => Type::Bool(ri <= li),
-            (Type::UInt(ri), Type::Int(li)) => Type::Bool((ri as i64) <= li),
-            (Type::UInt(ri), Type::Float(li)) => Type::Bool((ri as f64) <= li),
+            (Type::UInt(ri), Type::Int(li)) => Type::Bool((ri as i32) <= li),
+            (Type::UInt(ri), Type::Float(li)) => Type::Bool((ri as f32) <= li),
             _ => panic!("Invalid: Can't Compare {:?} with {:?}", r, l),
         }
     }
@@ -682,6 +873,44 @@ impl Node for Lte {
                     self.rhs.get_rtype()
                 ),
             });
+        }
+    }
+    fn deep_copy(&self) -> NodeRef {
+        Self::new(self.rhs.deep_copy(), self.lhs.deep_copy())
+    }
+    fn mutant_copy<'a>(
+        &self,
+        probabilty: f32,
+        node_depth: usize,
+        arg_types: &[TypeV],
+        build_table: &'a BuilderTable,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        if params.randomizer.gen::<f32>() <= probabilty {
+            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+        } else {
+            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+            ret.set_child(
+                0,
+                self.lhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            ret.set_child(
+                1,
+                self.rhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            return ret;
         }
     }
 }

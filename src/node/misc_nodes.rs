@@ -1,4 +1,5 @@
 use super::base::*;
+use rand::Rng;
 pub struct Cond {
     pub rtype: TypeV,
     pub arg_types: Vec<TypeV>,
@@ -112,5 +113,57 @@ impl Node for Cond {
         } else {
             return Err(TypeErr {msg: format!("Cond required argument of type ({:#?}, {:#?}, {:#?}); Got ({:#?}, {:#?}, {:#?})!!", TypeV::Bool, self.rtype, self.rtype, self.cond.get_rtype(), self.iftrue.get_rtype(), self.iffalse.get_rtype())});
         }
+    }
+    fn mutant_copy<'a>(
+        &self,
+        probabilty: f32,
+        node_depth: usize,
+        arg_types: &[TypeV],
+        build_table: &'a BuilderTable,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        if params.randomizer.gen::<f32>() <= probabilty {
+            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+        } else {
+            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+            ret.set_child(
+                0,
+                self.cond.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            ret.set_child(
+                1,
+                self.iftrue.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            ret.set_child(
+                2,
+                self.iffalse.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            return ret;
+        }
+    }
+    fn deep_copy(&self) -> NodeRef {
+        Self::new(
+            self.cond.deep_copy(),
+            self.iftrue.deep_copy(),
+            self.iffalse.deep_copy(),
+        )
     }
 }

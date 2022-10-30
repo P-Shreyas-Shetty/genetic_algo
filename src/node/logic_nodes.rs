@@ -1,4 +1,6 @@
 use super::base::*;
+use rand::Rng;
+
 pub struct And {
     pub rtype: TypeV,
     pub arg_types: Vec<TypeV>,
@@ -102,6 +104,45 @@ impl Node for And {
             });
         }
     }
+    fn deep_copy(&self) -> NodeRef {
+        Self::new(self.rhs.deep_copy(), self.lhs.deep_copy())
+    }
+    fn mutant_copy<'a>(
+        &self,
+        probabilty: f32,
+        node_depth: usize,
+        arg_types: &[TypeV],
+        build_table: &'a BuilderTable,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        if params.randomizer.gen::<f32>() <= probabilty {
+            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+        } else {
+            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+            ret.set_child(
+                0,
+                self.lhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            ret.set_child(
+                1,
+                self.rhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+
+            return ret;
+        }
+    }
 }
 
 pub struct Or {
@@ -130,6 +171,9 @@ impl Or {
             rhs: Null::zero(rtype),
             lhs: Null::zero(rtype),
         })
+    }
+    fn deep_copy(&self) -> NodeRef {
+        Self::new(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
 }
 
@@ -205,6 +249,45 @@ impl Node for Or {
                     self.rhs.get_rtype()
                 ),
             });
+        }
+    }
+    fn deep_copy(&self) -> NodeRef {
+        Self::new(self.rhs.deep_copy(), self.lhs.deep_copy())
+    }
+    fn mutant_copy<'a>(
+        &self,
+        probabilty: f32,
+        node_depth: usize,
+        arg_types: &[TypeV],
+        build_table: &'a BuilderTable,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        if params.randomizer.gen::<f32>() <= probabilty {
+            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+        } else {
+            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+            ret.set_child(
+                0,
+                self.lhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+            ret.set_child(
+                1,
+                self.rhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+
+            return ret;
         }
     }
 }
@@ -294,6 +377,35 @@ impl Node for Not {
                     self.rhs.get_rtype()
                 ),
             });
+        }
+    }
+    fn deep_copy(&self) -> NodeRef {
+        Self::new(self.rhs.deep_copy())
+    }
+    fn mutant_copy<'a>(
+        &self,
+        probabilty: f32,
+        node_depth: usize,
+        arg_types: &[TypeV],
+        build_table: &'a BuilderTable,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        if params.randomizer.gen::<f32>() <= probabilty {
+            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+        } else {
+            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+            ret.set_child(
+                0,
+                self.rhs.mutant_copy(
+                    probabilty * 2.0,
+                    node_depth + 1,
+                    arg_types,
+                    build_table,
+                    params,
+                ),
+            );
+
+            return ret;
         }
     }
 }

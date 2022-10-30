@@ -2,10 +2,6 @@ use rand;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
 
-pub trait Randomize {
-    fn random(rtype: TypeV) -> Self;
-}
-
 /// Type value
 #[derive(std::fmt::Debug, Clone, Copy, std::cmp::PartialEq, std::cmp::Eq, std::hash::Hash)]
 pub enum TypeV {
@@ -18,9 +14,9 @@ pub enum TypeV {
 /// Wrapper of Types possible
 #[derive(std::fmt::Debug, Clone, Copy)]
 pub enum Type {
-    Int(i64),
-    Float(f64),
-    UInt(u64),
+    Int(i32),
+    Float(f32),
+    UInt(u32),
     Bool(bool),
 }
 
@@ -28,13 +24,13 @@ impl Type {
     //These methods give "Zero" values of the type
     //I intend to use this as a marker type
     //I know its little wasteful, but its fine; I think
-    pub fn int(val: i64) -> Type {
+    pub fn int(val: i32) -> Type {
         Type::Int(val)
     }
-    pub fn float(val: f64) -> Type {
+    pub fn float(val: f32) -> Type {
         Type::Float(val)
     }
-    pub fn uint(val: u64) -> Type {
+    pub fn uint(val: u32) -> Type {
         Type::UInt(val)
     }
     pub fn bool(val: bool) -> Type {
@@ -50,25 +46,22 @@ impl Type {
         };
     }
 
-    pub fn int_range(a: i64, b: i64) -> Type {
+    pub fn int_range(a: i32, b: i32) -> Type {
         let mut rng = thread_rng();
         Type::Int(rng.gen_range(a..=b))
     }
-    pub fn float_range(a: f64, b: f64) -> Type {
+    pub fn float_range(a: f32, b: f32) -> Type {
         let mut rng = thread_rng();
         Type::Float(rng.gen_range(a..=b))
     }
 
-    pub fn uint_range(a: u64, b: u64) -> Type {
+    pub fn uint_range(a: u32, b: u32) -> Type {
         let mut rng = thread_rng();
         Type::UInt(rng.gen_range(a..=b))
     }
     pub fn bool_rand() -> Type {
         Type::Bool(rand::random())
     }
-}
-
-impl Randomize for Type {
     fn random(rtype: TypeV) -> Self {
         return match rtype {
             TypeV::Int => Type::Int(rand::random()),
@@ -91,7 +84,7 @@ impl std::fmt::Display for Type {
 }
 
 pub type NodeRef = Box<dyn Node>;
-
+#[derive(Debug)]
 pub struct TypeErr {
     pub msg: String,
 }
@@ -111,6 +104,15 @@ pub trait Node {
         arg_types: &[TypeV],
         node_rtype: TypeV,
         depth: usize,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef;
+    fn deep_copy(&self) -> NodeRef;
+    fn mutant_copy<'a>(
+        &self,
+        probabilty: f32,
+        node_depth: usize,
+        arg_types: &[TypeV],
+        build_table: &'a BuilderTable,
         params: &'a mut BuilderParams,
     ) -> NodeRef;
     fn type_check(&self) -> Result<(), TypeErr>;
@@ -174,6 +176,19 @@ impl Node for Null {
         Err(TypeErr {
             msg: "Null node is invalid!!".to_string(),
         })
+    }
+    fn deep_copy(&self) -> NodeRef {
+        return Null::zero(self.rtype);
+    }
+    fn mutant_copy<'a>(
+        &self,
+        probabilty: f32,
+        node_depth: usize,
+        arg_types: &[TypeV],
+        build_table: &'a BuilderTable,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        Self::zero(self.rtype)
     }
 }
 
@@ -252,11 +267,35 @@ impl Node for Val {
         depth: usize,
         params: &'a mut BuilderParams,
     ) -> NodeRef {
-        let val = Randomize::random(node_rtype);
+        let val = Type::random(node_rtype);
         Val::new(val)
     }
     fn type_check(&self) -> Result<(), TypeErr> {
         Ok(())
+    }
+    fn deep_copy(&self) -> NodeRef {
+        Self::new(self.v)
+    }
+    fn mutant_copy<'a>(
+        &self,
+        probabilty: f32,
+        node_depth: usize,
+        arg_types: &[TypeV],
+        build_table: &'a BuilderTable,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        if params.randomizer.gen::<f32>() <= probabilty {
+            match self.v {
+                Type::Float(f) => Self::new(Type::Float(
+                    params
+                        .randomizer
+                        .gen_range(params.float_range.0..=params.float_range.1),
+                )),
+                _             => unimplemented!()
+            }
+        } else {
+            self.deep_copy()
+        }
     }
 }
 
@@ -312,6 +351,19 @@ impl Node for Var {
     fn type_check(&self) -> Result<(), TypeErr> {
         Ok(())
     }
+    fn deep_copy(&self) -> NodeRef {
+        Self::new(self.idx, self.rtype)
+    }
+    fn mutant_copy<'a>(
+        &self,
+        probabilty: f32,
+        node_depth: usize,
+        arg_types: &[TypeV],
+        build_table: &'a BuilderTable,
+        params: &'a mut BuilderParams,
+    ) -> NodeRef {
+        self.deep_copy() //TODO:This is just a path for now
+    }
 }
 
 pub struct BuilderTable {
@@ -324,12 +376,12 @@ pub struct BuilderTable {
 }
 
 pub struct BuilderParams {
-    max_depth: usize,
-    randomizer: rand::prelude::ThreadRng,
-    termination_probability: f32,
-    float_range: (f32, f32),
-    int_range: (i32, i32),
-    uint_range: (u32, u32),
+    pub max_depth: usize,
+    pub randomizer: rand::prelude::ThreadRng,
+    pub termination_probability: f32,
+    pub float_range: (f32, f32),
+    pub int_range: (i32, i32),
+    pub uint_range: (u32, u32),
 }
 
 impl BuilderTable {
@@ -362,7 +414,7 @@ impl BuilderTable {
         if (params.randomizer.gen::<f32>() <= params.termination_probability)
             || (depth >= params.max_depth)
         {
-            if params.randomizer.gen::<f32>() <= 0.5 {
+            if params.randomizer.gen::<f32>() >= 0.5 {
                 &self.val_node
             } else {
                 &self.var_node
@@ -414,5 +466,22 @@ impl BuilderParams {
     pub fn uint_range(mut self, a: u32, b: u32) -> Self {
         self.uint_range = (a, b);
         self
+    }
+
+    pub fn set_max_depth(&mut self, val: usize) {
+        self.max_depth = val;
+    }
+    pub fn set_float_range(&mut self, a: f32, b: f32) {
+        self.float_range = (a, b);
+    }
+    pub fn set_int_range(&mut self, a: i32, b: i32) {
+        self.int_range = (a, b);
+    }
+
+    pub fn set_uint_range(&mut self, a: u32, b: u32) {
+        self.uint_range = (a, b);
+    }
+    pub fn set_termination_probability(&mut self, val: f32) {
+        self.termination_probability = val;
     }
 }
