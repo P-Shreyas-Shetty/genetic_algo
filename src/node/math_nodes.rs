@@ -74,7 +74,6 @@ macro_rules! single_arg_fn_node_def {
                 params: &'a mut BuilderParams,
             ) -> NodeRef {
                 if params.randomizer.gen::<f32>() <= probabilty {
-                    println!("###Function {}: probabilty: {} depth {}", stringify!($type_name), probabilty, node_depth);
                     self.build_random_node(
                         build_table,
                         arg_types,
