@@ -1,4 +1,3 @@
-
 #![allow(dead_code)]
 use rand;
 use rand::seq::SliceRandom;

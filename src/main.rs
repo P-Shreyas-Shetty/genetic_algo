@@ -1,44 +1,28 @@
+mod algorithm;
 mod node;
-use node::base::{BuilderParams, Type, TypeV, Val};
-use node::cmp_nodes::Eq;
-use node::op_nodes::{Add, Mul};
+
+use algorithm::population as ap;
+use node::base as nb;
+use node::btables::FloatFnTable;
 
 fn main() {
-    let v0 = Val::new(Type::int(0));
-    let v1 = Val::new(Type::int(0));
-    let v2 = Val::new(Type::int(0));
-    let v3 = Val::new(Type::int(0));
-    let e0 = Add::new(v0, v1);
-    let e1 = Mul::new(e0, v2);
-    let e2 = Eq::new(e1, v3);
-    let args_list: &[Type] = &[];
-    println!("{}\n={}", e2.to_str(0), e2.eval(args_list),);
-    let mut params = BuilderParams::new().max_depth(5);
-    println!("Max depth={}", params.max_depth);
-    let table = node::btables::FloatFnTable::new().table;
-    let root = table
-        .get_rand_node(0, TypeV::Float, &mut params)
-        .build_random_node(
-            &table,
-            &[TypeV::Float, TypeV::Float],
-            TypeV::Float,
-            0,
-            &mut params,
+    let table = FloatFnTable::new().table;
+    let mut params = nb::BuilderParams::new().max_depth(6);
+    let mut popln = ap::Population::new(vec![nb::TypeV::Float, nb::TypeV::Float], nb::TypeV::Float);
+    popln.set_build_table(table);
+    popln.set_params(params);
+    popln.init_population(4);
+
+    for p in popln.p {
+        let typecheck = if let Ok(_) = p.type_check() {
+            true
+        } else {
+            false
+        };
+        println!(
+            "{}\n######typecheck={}#####\n========================================",
+            p.to_str(),
+            typecheck
         );
-    println!(
-        "Random tree\n{}\nResult={}",
-        root.to_str(0),
-        root.eval(&[Type::Float(0.0), Type::Float(1.0)])
-    );
-    let root1 = root.mutant_copy(0.15, 0, &[TypeV::Float, TypeV::Float], &table, &mut params);
-    println!(
-        "Mutant Copy of root=\n{}\n Type check={:#?}",
-        root1.to_str(0),
-        root1.type_check()
-    );
-    if let Err(e) = root.type_check() {
-        println!("Err: {}", e.msg)
-    } else {
-        println!("Type check passed!")
     }
 }
