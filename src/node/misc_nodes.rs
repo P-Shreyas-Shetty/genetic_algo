@@ -116,47 +116,67 @@ impl Node for Cond {
     }
     fn mutant_copy<'a>(
         &self,
-        probabilty: f32,
+        probability: f32,
         node_depth: usize,
         arg_types: &[TypeV],
         build_table: &'a BuilderTable,
         params: &'a mut BuilderParams,
-    ) -> NodeRef {
-        if params.randomizer.gen::<f32>() <= probabilty {
-            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
+            Some(self.build_random_node(
+                build_table,
+                arg_types,
+                self.get_rtype(),
+                node_depth,
+                params,
+            ))
         } else {
-            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
-            ret.set_child(
-                0,
-                self.cond.mutant_copy(
-                    probabilty * 2.0,
-                    node_depth + 1,
-                    arg_types,
-                    build_table,
-                    params,
-                ),
+            let cond = self.cond.mutant_copy(
+                probability,
+                node_depth + 1,
+                arg_types,
+                build_table,
+                params,
             );
-            ret.set_child(
-                1,
-                self.iftrue.mutant_copy(
-                    probabilty * 2.0,
-                    node_depth + 1,
-                    arg_types,
-                    build_table,
-                    params,
-                ),
+            let iftrue = self.iftrue.mutant_copy(
+                probability,
+                node_depth + 1,
+                arg_types,
+                build_table,
+                params,
             );
-            ret.set_child(
-                2,
-                self.iffalse.mutant_copy(
-                    probabilty * 2.0,
-                    node_depth + 1,
-                    arg_types,
-                    build_table,
-                    params,
-                ),
+            let iffalse = self.iffalse.mutant_copy(
+                probability,
+                node_depth + 1,
+                arg_types,
+                build_table,
+                params,
             );
-            return ret;
+            match (cond, iftrue, iffalse) {
+                (None, None, None) => None,
+                (cond, iftrue, iffalse) => {
+                    let cond_vld = if let Some(c) = cond {
+                        c
+                    } else {
+                        self.cond.deep_copy()
+                    };
+                    let iftrue_vld = if let Some(t) = iftrue {
+                        t
+                    } else {
+                        self.iftrue.deep_copy()
+                    };
+                    let iffalse_vld = if let Some(f) = iffalse {
+                        f
+                    } else {
+                        self.iffalse.deep_copy()
+                    };
+                    let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+                    ret.set_child(0, cond_vld);
+                    ret.set_child(1, iftrue_vld);
+                    ret.set_child(2, iffalse_vld);
+                    return Some(ret);
+                }
+            }
         }
     }
     fn deep_copy(&self) -> NodeRef {

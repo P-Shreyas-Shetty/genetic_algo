@@ -111,12 +111,12 @@ pub trait Node {
     fn deep_copy(&self) -> NodeRef;
     fn mutant_copy<'a>(
         &self,
-        probabilty: f32,
+        probability: f32,
         node_depth: usize,
         arg_types: &[TypeV],
         build_table: &'a BuilderTable,
         params: &'a mut BuilderParams,
-    ) -> NodeRef;
+    ) -> Option<NodeRef>;
     fn type_check(&self) -> Result<(), TypeErr>;
 }
 
@@ -184,13 +184,13 @@ impl Node for Null {
     }
     fn mutant_copy<'a>(
         &self,
-        _probabilty: f32,
+        _probability: f32,
         _node_depth: usize,
         _arg_types: &[TypeV],
         _build_table: &'a BuilderTable,
         _params: &'a mut BuilderParams,
-    ) -> NodeRef {
-        Self::zero(self.rtype)
+    ) -> Option<NodeRef> {
+        None
     }
 }
 
@@ -280,23 +280,23 @@ impl Node for Val {
     }
     fn mutant_copy<'a>(
         &self,
-        probabilty: f32,
-        _node_depth: usize,
+        probability: f32,
+        node_depth: usize,
         _arg_types: &[TypeV],
         _build_table: &'a BuilderTable,
         params: &'a mut BuilderParams,
-    ) -> NodeRef {
-        if params.randomizer.gen::<f32>() <= probabilty {
-            match self.v {
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
+            Some(match self.v {
                 Type::Float(_) => Self::new(Type::Float(
                     params
                         .randomizer
                         .gen_range(params.float_range.0..=params.float_range.1),
                 )),
                 _ => unimplemented!(),
-            }
+            })
         } else {
-            self.deep_copy()
+            None
         }
     }
 }
@@ -358,13 +358,25 @@ impl Node for Var {
     }
     fn mutant_copy<'a>(
         &self,
-        probabilty: f32,
+        probability: f32,
         node_depth: usize,
         arg_types: &[TypeV],
-        build_table: &'a BuilderTable,
+        _build_table: &'a BuilderTable,
         params: &'a mut BuilderParams,
-    ) -> NodeRef {
-        self.deep_copy() //TODO:This is just a path for now
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
+            let valid_indices: Vec<_> = (0..arg_types.len())
+                .filter(|x| arg_types[*x] == self.rtype) //Only arguments with same type as rtype are to be chosen
+                .collect();
+            let vindex = *valid_indices.choose(&mut params.randomizer).unwrap();
+            if vindex == self.idx {
+                None
+            } else {
+                Some(Self::new(vindex, self.rtype))
+            }
+        } else {
+            None
+        }
     }
 }
 
@@ -437,7 +449,7 @@ impl BuilderParams {
     pub fn new() -> BuilderParams {
         BuilderParams {
             max_depth: 10,                 //Set this value as default
-            termination_probability: 0.05, //set early termination probabilty as 5% in the beginning
+            termination_probability: 0.05, //set early termination probability as 5% in the beginning
             float_range: (0.0, 1.0),
             int_range: (-100, 100),
             uint_range: (0, 100),
@@ -485,5 +497,12 @@ impl BuilderParams {
     }
     pub fn set_termination_probability(&mut self, val: f32) {
         self.termination_probability = val;
+    }
+    pub fn get_mut_prob(&self, base_prob: f32, depth: usize)->f32 {
+        
+        let s = (usize::pow(2, depth as u32) as f32)*base_prob;
+        let prob = 1.0/(1.0+f32::exp(-1.5*(s-1.0)));
+        //println!("depth={depth} base_prob={base_prob} s={s} prob={prob}");
+        return prob;
     }
 }

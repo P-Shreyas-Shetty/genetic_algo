@@ -67,33 +67,31 @@ macro_rules! single_arg_fn_node_def {
             }
             fn mutant_copy<'a>(
                 &self,
-                probabilty: f32,
+                probability: f32,
                 node_depth: usize,
                 arg_types: &[TypeV],
                 build_table: &'a BuilderTable,
                 params: &'a mut BuilderParams,
-            ) -> NodeRef {
-                if params.randomizer.gen::<f32>() <= probabilty {
-                    self.build_random_node(
+            ) -> Option<NodeRef> {
+                if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
+                    Some(self.build_random_node(
                         build_table,
                         arg_types,
                         self.get_rtype(),
                         node_depth,
                         params,
-                    )
+                    ))
                 } else {
+                    let arg = self.arg.mutant_copy(
+                        probability,
+                        node_depth + 1,
+                        arg_types,
+                        build_table,
+                        params,
+                    )?; //if child node's mutation was unsuccesful, then this node's mutation was unsuccesful as a whole
                     let mut ret = Self::zero();
-                    ret.set_child(
-                        0,
-                        self.arg.mutant_copy(
-                            probabilty * 2.0,
-                            node_depth + 1,
-                            arg_types,
-                            build_table,
-                            params,
-                        ),
-                    );
-                    return ret;
+                    ret.set_child(0, arg);
+                    return Some(ret);
                 }
             }
             fn type_check(&self) -> Result<(), TypeErr> {

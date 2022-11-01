@@ -114,37 +114,55 @@ impl Node for Add {
     }
     fn mutant_copy<'a>(
         &self,
-        probabilty: f32,
+        probability: f32,
         node_depth: usize,
         arg_types: &[TypeV],
         build_table: &'a BuilderTable,
         params: &'a mut BuilderParams,
-    ) -> NodeRef {
-        if params.randomizer.gen::<f32>() <= probabilty {
-            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
+            Some(self.build_random_node(
+                build_table,
+                arg_types,
+                self.get_rtype(),
+                node_depth,
+                params,
+            ))
         } else {
-            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
-            ret.set_child(
-                0,
-                self.lhs.mutant_copy(
-                    probabilty * 2.0,
-                    node_depth + 1,
-                    arg_types,
-                    build_table,
-                    params,
-                ),
+            let lhs = self.lhs.mutant_copy(
+                probability,
+                node_depth + 1,
+                arg_types,
+                build_table,
+                params,
             );
-            ret.set_child(
-                1,
-                self.rhs.mutant_copy(
-                    probabilty * 2.0,
-                    node_depth + 1,
-                    arg_types,
-                    build_table,
-                    params,
-                ),
+            let rhs = self.rhs.mutant_copy(
+                probability,
+                node_depth + 1,
+                arg_types,
+                build_table,
+                params,
             );
-            return ret;
+            match (lhs, rhs) {
+                (None, None) => None, //If both child nodes' mutation was unsuccessful, then this node wasn't mutated. So return None
+                (lhs, rhs) => {
+                    //If either of children mutated, then node is mutated. Copy the node that wasn't mutated
+                    let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+                    let lhs_s = if let Some(lhs_s) = lhs {
+                        lhs_s
+                    } else {
+                        self.lhs.deep_copy()
+                    };
+                    let rhs_s = if let Some(rhs_s) = rhs {
+                        rhs_s
+                    } else {
+                        self.rhs.deep_copy()
+                    };
+                    ret.set_child(0, lhs_s);
+                    ret.set_child(1, rhs_s);
+                    return Some(ret);
+                }
+            }
         }
     }
 }
@@ -260,37 +278,55 @@ impl Node for Sub {
     }
     fn mutant_copy<'a>(
         &self,
-        probabilty: f32,
+        probability: f32,
         node_depth: usize,
         arg_types: &[TypeV],
         build_table: &'a BuilderTable,
         params: &'a mut BuilderParams,
-    ) -> NodeRef {
-        if params.randomizer.gen::<f32>() <= probabilty {
-            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
+            Some(self.build_random_node(
+                build_table,
+                arg_types,
+                self.get_rtype(),
+                node_depth,
+                params,
+            ))
         } else {
-            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
-            ret.set_child(
-                0,
-                self.lhs.mutant_copy(
-                    probabilty * 2.0,
-                    node_depth + 1,
-                    arg_types,
-                    build_table,
-                    params,
-                ),
+            let lhs = self.lhs.mutant_copy(
+                probability,
+                node_depth + 1,
+                arg_types,
+                build_table,
+                params,
             );
-            ret.set_child(
-                1,
-                self.rhs.mutant_copy(
-                    probabilty * 2.0,
-                    node_depth + 1,
-                    arg_types,
-                    build_table,
-                    params,
-                ),
+            let rhs = self.rhs.mutant_copy(
+                probability,
+                node_depth + 1,
+                arg_types,
+                build_table,
+                params,
             );
-            return ret;
+            match (lhs, rhs) {
+                (None, None) => None, //If both child nodes' mutation was unsuccessful, then this node wasn't mutated. So return None
+                (lhs, rhs) => {
+                    //If either of children mutated, then node is mutated. Copy the node that wasn't mutated
+                    let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+                    let lhs_s = if let Some(lhs_s) = lhs {
+                        lhs_s
+                    } else {
+                        self.lhs.deep_copy()
+                    };
+                    let rhs_s = if let Some(rhs_s) = rhs {
+                        rhs_s
+                    } else {
+                        self.rhs.deep_copy()
+                    };
+                    ret.set_child(0, lhs_s);
+                    ret.set_child(1, rhs_s);
+                    return Some(ret);
+                }
+            }
         }
     }
 }
@@ -406,37 +442,56 @@ impl Node for Mul {
     }
     fn mutant_copy<'a>(
         &self,
-        probabilty: f32,
+        probability: f32,
         node_depth: usize,
         arg_types: &[TypeV],
         build_table: &'a BuilderTable,
         params: &'a mut BuilderParams,
-    ) -> NodeRef {
-        if params.randomizer.gen::<f32>() <= probabilty {
-            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
+            Some(self.build_random_node(
+                build_table,
+                arg_types,
+                self.get_rtype(),
+                node_depth,
+                params,
+            ))
         } else {
-            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
-            ret.set_child(
-                0,
-                self.lhs.mutant_copy(
-                    probabilty * 2.0,
-                    node_depth + 1,
-                    arg_types,
-                    build_table,
-                    params,
-                ),
+            let lhs = self.lhs.mutant_copy(
+                probability,
+                node_depth + 1,
+                arg_types,
+                build_table,
+                params,
             );
-            ret.set_child(
-                1,
-                self.rhs.mutant_copy(
-                    probabilty * 2.0,
-                    node_depth + 1,
-                    arg_types,
-                    build_table,
-                    params,
-                ),
+            let rhs = self.rhs.mutant_copy(
+                probability,
+                node_depth + 1,
+                arg_types,
+                build_table,
+                params,
             );
-            return ret;
+            match (lhs, rhs) {
+                (None, None) => None, //If both child nodes' mutation was unsuccessful, then this node wasn't mutated. So return None
+                (lhs, rhs) => {
+                    //If either of children mutated, then node is mutated. Copy the node that wasn't mutated
+                    let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+
+                    let lhs_s = if let Some(lhs_s) = lhs {
+                        lhs_s
+                    } else {
+                        self.lhs.deep_copy()
+                    };
+                    let rhs_s = if let Some(rhs_s) = rhs {
+                        rhs_s
+                    } else {
+                        self.rhs.deep_copy()
+                    };
+                    ret.set_child(0, lhs_s);
+                    ret.set_child(1, rhs_s);
+                    return Some(ret);
+                }
+            }
         }
     }
 }
@@ -555,37 +610,56 @@ impl Node for Div {
     }
     fn mutant_copy<'a>(
         &self,
-        probabilty: f32,
+        probability: f32,
         node_depth: usize,
         arg_types: &[TypeV],
         build_table: &'a BuilderTable,
         params: &'a mut BuilderParams,
-    ) -> NodeRef {
-        if params.randomizer.gen::<f32>() <= probabilty {
-            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
+            Some(self.build_random_node(
+                build_table,
+                arg_types,
+                self.get_rtype(),
+                node_depth,
+                params,
+            ))
         } else {
-            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
-            ret.set_child(
-                0,
-                self.lhs.mutant_copy(
-                    probabilty * 2.0,
-                    node_depth + 1,
-                    arg_types,
-                    build_table,
-                    params,
-                ),
+            let lhs = self.lhs.mutant_copy(
+                probability,
+                node_depth + 1,
+                arg_types,
+                build_table,
+                params,
             );
-            ret.set_child(
-                1,
-                self.rhs.mutant_copy(
-                    probabilty * 2.0,
-                    node_depth + 1,
-                    arg_types,
-                    build_table,
-                    params,
-                ),
+            let rhs = self.rhs.mutant_copy(
+                probability,
+                node_depth + 1,
+                arg_types,
+                build_table,
+                params,
             );
-            return ret;
+            match (lhs, rhs) {
+                (None, None) => None, //If both child nodes' mutation was unsuccessful, then this node wasn't mutated. So return None
+                (lhs, rhs) => {
+                    //If either of children mutated, then node is mutated. Copy the node that wasn't mutated
+                    let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+
+                    let lhs_s = if let Some(lhs_s) = lhs {
+                        lhs_s
+                    } else {
+                        self.lhs.deep_copy()
+                    };
+                    let rhs_s = if let Some(rhs_s) = rhs {
+                        rhs_s
+                    } else {
+                        self.rhs.deep_copy()
+                    };
+                    ret.set_child(0, lhs_s);
+                    ret.set_child(1, rhs_s);
+                    return Some(ret);
+                }
+            }
         }
     }
 }
@@ -703,37 +777,56 @@ impl Node for Pow {
     }
     fn mutant_copy<'a>(
         &self,
-        probabilty: f32,
+        probability: f32,
         node_depth: usize,
         arg_types: &[TypeV],
         build_table: &'a BuilderTable,
         params: &'a mut BuilderParams,
-    ) -> NodeRef {
-        if params.randomizer.gen::<f32>() <= probabilty {
-            self.build_random_node(build_table, arg_types, self.get_rtype(), node_depth, params)
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
+            Some(self.build_random_node(
+                build_table,
+                arg_types,
+                self.get_rtype(),
+                node_depth,
+                params,
+            ))
         } else {
-            let mut ret = Self::zero(self.rtype, self.arg_types.clone());
-            ret.set_child(
-                0,
-                self.lhs.mutant_copy(
-                    probabilty * 2.0,
-                    node_depth + 1,
-                    arg_types,
-                    build_table,
-                    params,
-                ),
+            let lhs = self.lhs.mutant_copy(
+                probability,
+                node_depth + 1,
+                arg_types,
+                build_table,
+                params,
             );
-            ret.set_child(
-                1,
-                self.rhs.mutant_copy(
-                    probabilty * 2.0,
-                    node_depth + 1,
-                    arg_types,
-                    build_table,
-                    params,
-                ),
+            let rhs = self.rhs.mutant_copy(
+                probability,
+                node_depth + 1,
+                arg_types,
+                build_table,
+                params,
             );
-            return ret;
+            match (lhs, rhs) {
+                (None, None) => None, //If both child nodes' mutation was unsuccessful, then this node wasn't mutated. So return None
+                (lhs, rhs) => {
+                    //If either of children mutated, then node is mutated. Copy the node that wasn't mutated
+                    let mut ret = Self::zero(self.rtype, self.arg_types.clone());
+
+                    let lhs_s = if let Some(lhs_s) = lhs {
+                        lhs_s
+                    } else {
+                        self.lhs.deep_copy()
+                    };
+                    let rhs_s = if let Some(rhs_s) = rhs {
+                        rhs_s
+                    } else {
+                        self.rhs.deep_copy()
+                    };
+                    ret.set_child(0, lhs_s);
+                    ret.set_child(1, rhs_s);
+                    return Some(ret);
+                }
+            }
         }
     }
 }

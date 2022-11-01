@@ -46,6 +46,24 @@ impl Population {
         }
     }
 
+    #[allow(dead_code)]
+    pub fn generate_mutants(&mut self, num_subs: usize, mut_prob: f32) {
+        let initial_population = self.p.len();
+        for i in 0..num_subs {
+            let p = &self.p[i % initial_population];
+            let maybe_mutant = p.root.mutant_copy(
+                mut_prob,
+                0,
+                &self.arg_types,
+                &self.builder_table,
+                &mut self.params,
+            );
+            if let Some(s) = maybe_mutant {
+                self.p.push(et::Expr::new(s));
+            }
+        }
+    }
+
     ///Sorts the population accordig to fitness,
     /// if the fitness is uncalculated, panics
     #[allow(dead_code)]

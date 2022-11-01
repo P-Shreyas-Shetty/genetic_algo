@@ -7,12 +7,19 @@ pub enum Error {
 }
 
 pub struct Expr {
-    root: nb::NodeRef,
+    pub root: nb::NodeRef,
     arg_types: Vec<nb::TypeV>,
     rtype: nb::TypeV,
 }
 
 impl Expr {
+    pub fn new(root: nb::NodeRef) -> Expr {
+        Expr {
+            arg_types: root.get_arg_types().to_vec(),
+            rtype: root.get_rtype(),
+            root,
+        }
+    }
     pub fn random<'a>(
         arg_types: Vec<nb::TypeV>,
         rtype: nb::TypeV,
