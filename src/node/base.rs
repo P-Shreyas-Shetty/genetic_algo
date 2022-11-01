@@ -1,3 +1,5 @@
+
+#![allow(dead_code)]
 use rand;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
@@ -37,6 +39,7 @@ impl Type {
         Type::Bool(val)
     }
 
+    #[allow(dead_code)]
     pub fn rand(&self) -> Type {
         return match self {
             Type::Int(_) => Type::Int(rand::random()),
@@ -149,7 +152,7 @@ impl Node for Null {
     fn get_rtype(&self) -> TypeV {
         return self.rtype;
     }
-    fn eval(&self, args: &[Type]) -> Type {
+    fn eval(&self, _args: &[Type]) -> Type {
         panic!("Cannot evaluate a Null block!!");
     }
 
@@ -159,16 +162,16 @@ impl Node for Null {
     fn get_type_zero(&self) -> NodeRef {
         Null::zero(self.rtype)
     }
-    fn set_child(&mut self, child_index: usize, child: NodeRef) {
+    fn set_child(&mut self, _child_index: usize, _child: NodeRef) {
         panic!("Cannot set child node for Null node!!");
     }
     fn build_random_node<'a>(
         &self,
-        build_table: &'a BuilderTable,
-        arg_types: &[TypeV],
+        _build_table: &'a BuilderTable,
+        _arg_types: &[TypeV],
         node_rtype: TypeV,
-        depth: usize,
-        params: &'a mut BuilderParams,
+        _depth: usize,
+        _params: &'a mut BuilderParams,
     ) -> NodeRef {
         Null::zero(node_rtype)
     }
@@ -182,11 +185,11 @@ impl Node for Null {
     }
     fn mutant_copy<'a>(
         &self,
-        probabilty: f32,
-        node_depth: usize,
-        arg_types: &[TypeV],
-        build_table: &'a BuilderTable,
-        params: &'a mut BuilderParams,
+        _probabilty: f32,
+        _node_depth: usize,
+        _arg_types: &[TypeV],
+        _build_table: &'a BuilderTable,
+        _params: &'a mut BuilderParams,
     ) -> NodeRef {
         Self::zero(self.rtype)
     }
@@ -253,7 +256,7 @@ impl Node for Val {
     fn get_arg_types(&self) -> &[TypeV] {
         return &self.arg_types;
     }
-    fn set_child(&mut self, child_index: usize, child: NodeRef) {
+    fn set_child(&mut self, _child_index: usize, _child: NodeRef) {
         panic!("Cannot set child node for Val node!!");
     }
     fn get_type_zero(&self) -> NodeRef {
@@ -261,11 +264,11 @@ impl Node for Val {
     }
     fn build_random_node<'a>(
         &self,
-        build_table: &'a BuilderTable,
-        arg_types: &[TypeV],
+        _build_table: &'a BuilderTable,
+        _arg_types: &[TypeV],
         node_rtype: TypeV,
-        depth: usize,
-        params: &'a mut BuilderParams,
+        _depth: usize,
+        _params: &'a mut BuilderParams,
     ) -> NodeRef {
         let val = Type::random(node_rtype);
         Val::new(val)
@@ -279,19 +282,19 @@ impl Node for Val {
     fn mutant_copy<'a>(
         &self,
         probabilty: f32,
-        node_depth: usize,
-        arg_types: &[TypeV],
-        build_table: &'a BuilderTable,
+        _node_depth: usize,
+        _arg_types: &[TypeV],
+        _build_table: &'a BuilderTable,
         params: &'a mut BuilderParams,
     ) -> NodeRef {
         if params.randomizer.gen::<f32>() <= probabilty {
             match self.v {
-                Type::Float(f) => Self::new(Type::Float(
+                Type::Float(_) => Self::new(Type::Float(
                     params
                         .randomizer
                         .gen_range(params.float_range.0..=params.float_range.1),
                 )),
-                _             => unimplemented!()
+                _ => unimplemented!(),
             }
         } else {
             self.deep_copy()
@@ -328,7 +331,7 @@ impl Node for Var {
     fn get_arg_types(&self) -> &[TypeV] {
         return &self.arg_types;
     }
-    fn set_child(&mut self, child_index: usize, child: NodeRef) {
+    fn set_child(&mut self, _child_index: usize, _child: NodeRef) {
         panic!("Cannot set child node for Var node!!");
     }
     fn get_type_zero(&self) -> NodeRef {
@@ -336,16 +339,16 @@ impl Node for Var {
     }
     fn build_random_node<'a>(
         &self,
-        build_table: &'a BuilderTable,
+        _build_table: &'a BuilderTable,
         arg_types: &[TypeV],
         node_rtype: TypeV,
-        depth: usize,
+        _depth: usize,
         params: &'a mut BuilderParams,
     ) -> NodeRef {
         let valid_indices: Vec<_> = (0..arg_types.len())
             .filter(|x| arg_types[*x] == node_rtype) //Only arguments with same type as rtype are to be chosen
             .collect();
-        let vindex = *valid_indices.choose(&mut rand::thread_rng()).unwrap();
+        let vindex = *valid_indices.choose(&mut params.randomizer).unwrap();
         return Var::new(vindex, node_rtype);
     }
     fn type_check(&self) -> Result<(), TypeErr> {
