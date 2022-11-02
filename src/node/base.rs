@@ -498,11 +498,9 @@ impl BuilderParams {
     pub fn set_termination_probability(&mut self, val: f32) {
         self.termination_probability = val;
     }
-    pub fn get_mut_prob(&self, base_prob: f32, depth: usize)->f32 {
-        
-        let s = (usize::pow(2, depth as u32) as f32)*base_prob;
-        let prob = 1.0/(1.0+f32::exp(-1.5*(s-1.0)));
-        //println!("depth={depth} base_prob={base_prob} s={s} prob={prob}");
+    pub fn get_mut_prob(&self, base_prob: f32, depth: usize) -> f32 {
+        let s = (usize::pow(2, depth as u32) as f32) * base_prob;
+        let prob = 1.0 / (1.0 + f32::exp(-5.5 * (s - 0.7))); //FIXME: Maybe this is not a good function for probability growth
         return prob;
     }
 }

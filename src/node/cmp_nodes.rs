@@ -134,20 +134,12 @@ impl Node for Eq {
                 params,
             ))
         } else {
-            let lhs = self.lhs.mutant_copy(
-                probability,
-                node_depth + 1,
-                arg_types,
-                build_table,
-                params,
-            );
-            let rhs = self.rhs.mutant_copy(
-                probability,
-                node_depth + 1,
-                arg_types,
-                build_table,
-                params,
-            );
+            let lhs =
+                self.lhs
+                    .mutant_copy(probability, node_depth + 1, arg_types, build_table, params);
+            let rhs =
+                self.rhs
+                    .mutant_copy(probability, node_depth + 1, arg_types, build_table, params);
             match (lhs, rhs) {
                 (None, None) => None, //If both child nodes' mutation was unsuccessful, then this node wasn't mutated. So return None
                 (lhs, rhs) => {
@@ -306,20 +298,12 @@ impl Node for NEq {
                 params,
             ))
         } else {
-            let lhs = self.lhs.mutant_copy(
-                probability,
-                node_depth + 1,
-                arg_types,
-                build_table,
-                params,
-            );
-            let rhs = self.rhs.mutant_copy(
-                probability,
-                node_depth + 1,
-                arg_types,
-                build_table,
-                params,
-            );
+            let lhs =
+                self.lhs
+                    .mutant_copy(probability, node_depth + 1, arg_types, build_table, params);
+            let rhs =
+                self.rhs
+                    .mutant_copy(probability, node_depth + 1, arg_types, build_table, params);
             match (lhs, rhs) {
                 (None, None) => None, //If both child nodes' mutation was unsuccessful, then this node wasn't mutated. So return None
                 (lhs, rhs) => {
@@ -477,20 +461,12 @@ impl Node for Gt {
                 params,
             ))
         } else {
-            let lhs = self.lhs.mutant_copy(
-                probability,
-                node_depth + 1,
-                arg_types,
-                build_table,
-                params,
-            );
-            let rhs = self.rhs.mutant_copy(
-                probability,
-                node_depth + 1,
-                arg_types,
-                build_table,
-                params,
-            );
+            let lhs =
+                self.lhs
+                    .mutant_copy(probability, node_depth + 1, arg_types, build_table, params);
+            let rhs =
+                self.rhs
+                    .mutant_copy(probability, node_depth + 1, arg_types, build_table, params);
             match (lhs, rhs) {
                 (None, None) => None, //If both child nodes' mutation was unsuccessful, then this node wasn't mutated. So return None
                 (lhs, rhs) => {
@@ -648,20 +624,12 @@ impl Node for Gte {
                 params,
             ))
         } else {
-            let lhs = self.lhs.mutant_copy(
-                probability,
-                node_depth + 1,
-                arg_types,
-                build_table,
-                params,
-            );
-            let rhs = self.rhs.mutant_copy(
-                probability,
-                node_depth + 1,
-                arg_types,
-                build_table,
-                params,
-            );
+            let lhs =
+                self.lhs
+                    .mutant_copy(probability, node_depth + 1, arg_types, build_table, params);
+            let rhs =
+                self.rhs
+                    .mutant_copy(probability, node_depth + 1, arg_types, build_table, params);
             match (lhs, rhs) {
                 (None, None) => None, //If both child nodes' mutation was unsuccessful, then this node wasn't mutated. So return None
                 (lhs, rhs) => {
@@ -819,20 +787,12 @@ impl Node for Lt {
                 params,
             ))
         } else {
-            let lhs = self.lhs.mutant_copy(
-                probability,
-                node_depth + 1,
-                arg_types,
-                build_table,
-                params,
-            );
-            let rhs = self.rhs.mutant_copy(
-                probability,
-                node_depth + 1,
-                arg_types,
-                build_table,
-                params,
-            );
+            let lhs =
+                self.lhs
+                    .mutant_copy(probability, node_depth + 1, arg_types, build_table, params);
+            let rhs =
+                self.rhs
+                    .mutant_copy(probability, node_depth + 1, arg_types, build_table, params);
             match (lhs, rhs) {
                 (None, None) => None, //If both child nodes' mutation was unsuccessful, then this node wasn't mutated. So return None
                 (lhs, rhs) => {
@@ -990,20 +950,12 @@ impl Node for Lte {
                 params,
             ))
         } else {
-            let lhs = self.lhs.mutant_copy(
-                probability,
-                node_depth + 1,
-                arg_types,
-                build_table,
-                params,
-            );
-            let rhs = self.rhs.mutant_copy(
-                probability,
-                node_depth + 1,
-                arg_types,
-                build_table,
-                params,
-            );
+            let lhs =
+                self.lhs
+                    .mutant_copy(probability, node_depth + 1, arg_types, build_table, params);
+            let rhs =
+                self.rhs
+                    .mutant_copy(probability, node_depth + 1, arg_types, build_table, params);
             match (lhs, rhs) {
                 (None, None) => None, //If both child nodes' mutation was unsuccessful, then this node wasn't mutated. So return None
                 (lhs, rhs) => {

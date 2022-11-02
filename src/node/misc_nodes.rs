@@ -131,13 +131,9 @@ impl Node for Cond {
                 params,
             ))
         } else {
-            let cond = self.cond.mutant_copy(
-                probability,
-                node_depth + 1,
-                arg_types,
-                build_table,
-                params,
-            );
+            let cond =
+                self.cond
+                    .mutant_copy(probability, node_depth + 1, arg_types, build_table, params);
             let iftrue = self.iftrue.mutant_copy(
                 probability,
                 node_depth + 1,
