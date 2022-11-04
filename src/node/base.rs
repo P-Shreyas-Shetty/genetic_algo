@@ -205,7 +205,7 @@ pub struct Val {
 }
 
 impl Val {
-    pub fn alloc(val: Type) -> NodeRef {
+    pub fn make(val: Type) -> NodeRef {
         let rtype = match val {
             Type::Bool(_) => TypeV::Bool,
             Type::UInt(_) => TypeV::UInt,
@@ -264,13 +264,13 @@ impl Node for Val {
         _params: &'a mut BuilderParams,
     ) -> NodeRef {
         let val = Type::random(node_rtype);
-        Val::alloc(val)
+        Val::make(val)
     }
     fn type_check(&self) -> Result<(), TypeErr> {
         Ok(())
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::alloc(self.v)
+        Self::make(self.v)
     }
     fn mutant_copy<'a>(
         &self,
@@ -282,7 +282,7 @@ impl Node for Val {
     ) -> Option<NodeRef> {
         if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
             Some(match self.v {
-                Type::Float(_) => Self::alloc(Type::Float(
+                Type::Float(_) => Self::make(Type::Float(
                     params
                         .randomizer
                         .gen_range(params.float_range.0..=params.float_range.1),
@@ -302,7 +302,7 @@ pub struct Var {
 }
 
 impl Var {
-    pub fn alloc(idx: usize, rtype: TypeV) -> NodeRef {
+    pub fn make(idx: usize, rtype: TypeV) -> NodeRef {
         Box::new(Var {
             idx,
             rtype,
@@ -328,7 +328,7 @@ impl Node for Var {
         panic!("Cannot set child node for Var node!!");
     }
     fn get_type_zero(&self) -> NodeRef {
-        Self::alloc(0, self.rtype)
+        Self::make(0, self.rtype)
     }
     fn build_random_node<'a>(
         &self,
@@ -342,13 +342,13 @@ impl Node for Var {
             .filter(|x| arg_types[*x] == node_rtype) //Only arguments with same type as rtype are to be chosen
             .collect();
         let vindex = *valid_indices.choose(&mut params.randomizer).unwrap();
-        Var::alloc(vindex, node_rtype)
+        Var::make(vindex, node_rtype)
     }
     fn type_check(&self) -> Result<(), TypeErr> {
         Ok(())
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::alloc(self.idx, self.rtype)
+        Self::make(self.idx, self.rtype)
     }
     fn mutant_copy<'a>(
         &self,
@@ -366,7 +366,7 @@ impl Node for Var {
             if vindex == self.idx {
                 None
             } else {
-                Some(Self::alloc(vindex, self.rtype))
+                Some(Self::make(vindex, self.rtype))
             }
         } else {
             None
@@ -400,7 +400,7 @@ impl BuilderTable {
             rtype_uint: vec![],
             rtype_float: vec![],
             val_node: Val::zero(TypeV::Bool),
-            var_node: Var::alloc(0, TypeV::Bool),
+            var_node: Var::make(0, TypeV::Bool),
         }
     }
 

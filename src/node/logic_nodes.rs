@@ -10,7 +10,7 @@ pub struct And {
 }
 
 impl And {
-    pub fn alloc(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
+    pub fn make(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), lhs.get_rtype());
         assert_eq!(rhs.get_rtype(), TypeV::Bool);
@@ -100,7 +100,7 @@ impl Node for And {
         }
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::alloc(self.rhs.deep_copy(), self.lhs.deep_copy())
+        Self::make(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
     fn mutant_copy<'a>(
         &self,
@@ -158,7 +158,7 @@ pub struct Or {
 }
 
 impl Or {
-    pub fn alloc(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
+    pub fn make(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), lhs.get_rtype());
         assert_eq!(rhs.get_rtype(), TypeV::Bool);
@@ -178,7 +178,7 @@ impl Or {
         })
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::alloc(self.rhs.deep_copy(), self.lhs.deep_copy())
+        Self::make(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
 }
 
@@ -251,7 +251,7 @@ impl Node for Or {
         }
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::alloc(self.rhs.deep_copy(), self.lhs.deep_copy())
+        Self::make(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
     fn mutant_copy<'a>(
         &self,
@@ -308,7 +308,7 @@ pub struct Not {
 }
 
 impl Not {
-    pub fn alloc(rhs: NodeRef) -> NodeRef {
+    pub fn make(rhs: NodeRef) -> NodeRef {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), TypeV::Bool);
         Box::new(Not {
@@ -383,7 +383,7 @@ impl Node for Not {
         }
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::alloc(self.rhs.deep_copy())
+        Self::make(self.rhs.deep_copy())
     }
     fn mutant_copy<'a>(
         &self,
