@@ -12,8 +12,17 @@ fn main() {
     let train_x = vec![
         vec![nb::Type::float(1.0), nb::Type::float(2.0)],
         vec![nb::Type::float(3.0), nb::Type::float(4.0)],
+        vec![nb::Type::float(5.0), nb::Type::float(6.0)],
+        vec![nb::Type::float(7.0), nb::Type::float(8.0)],
+        vec![nb::Type::float(-3.0), nb::Type::float(4.0)],
     ];
-    let train_y = vec![nb::Type::float(3.0), nb::Type::float(7.0)];
+    let train_y = vec![
+        nb::Type::float(3.0),
+        nb::Type::float(7.0),
+        nb::Type::float(11.0),
+        nb::Type::float(15.0),
+        nb::Type::float(1.0),
+    ];
     popln.set_build_table(table);
     popln.set_params(params);
     popln.init_population(4);
@@ -23,11 +32,6 @@ fn main() {
     popln.calc_err(&train_x, &train_y);
     popln.sort_population();
     for (i, p) in popln.p.iter().enumerate() {
-        let typecheck = if let Ok(_) = p.type_check() {
-            true
-        } else {
-            false
-        };
         println!(
             ">>>[{i}]\n{}\n###### error={:#?} #####\n========================================",
             p.to_str(),

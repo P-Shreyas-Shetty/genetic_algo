@@ -9,36 +9,45 @@ pub struct FloatFnTable {
 
 impl FloatFnTable {
     pub fn new() -> Self {
-        let mut b = Self {
+        let mut float_fn_table = Self {
             table: BuilderTable::new(),
         };
-        b.table.push(TypeV::Float, math::Sin::zero());
-        b.table.push(TypeV::Float, math::Cos::zero());
-        b.table.push(TypeV::Float, math::Tan::zero());
-        b.table.push(TypeV::Float, math::Exp::zero());
-        b.table.push(TypeV::Float, math::Log::zero());
-        b.table.push(TypeV::Float, math::Abs::zero());
-        b.table.push(
+        float_fn_table.table.push(TypeV::Float, math::Sin::zero());
+        float_fn_table.table.push(TypeV::Float, math::Cos::zero());
+        float_fn_table.table.push(TypeV::Float, math::Tan::zero());
+        float_fn_table.table.push(TypeV::Float, math::ASin::zero());
+        float_fn_table.table.push(TypeV::Float, math::ACos::zero());
+        float_fn_table.table.push(TypeV::Float, math::ATan::zero());
+        float_fn_table.table.push(TypeV::Float, math::Sinh::zero());
+        float_fn_table.table.push(TypeV::Float, math::Cosh::zero());
+        float_fn_table.table.push(TypeV::Float, math::Tanh::zero());
+        float_fn_table.table.push(TypeV::Float, math::ASinh::zero());
+        float_fn_table.table.push(TypeV::Float, math::ACosh::zero());
+        float_fn_table.table.push(TypeV::Float, math::ATanh::zero());
+        float_fn_table.table.push(TypeV::Float, math::Exp::zero());
+        float_fn_table.table.push(TypeV::Float, math::Log::zero());
+        float_fn_table.table.push(TypeV::Float, math::Abs::zero());
+        float_fn_table.table.push(
             TypeV::Float,
             ops::Add::zero(TypeV::Float, vec![TypeV::Float, TypeV::Float]),
         );
-        b.table.push(
+        float_fn_table.table.push(
             TypeV::Float,
             ops::Sub::zero(TypeV::Float, vec![TypeV::Float, TypeV::Float]),
         );
-        b.table.push(
+        float_fn_table.table.push(
             TypeV::Float,
             ops::Mul::zero(TypeV::Float, vec![TypeV::Float, TypeV::Float]),
         );
-        b.table.push(
+        float_fn_table.table.push(
             TypeV::Float,
             ops::Div::zero(TypeV::Float, vec![TypeV::Float, TypeV::Float]),
         );
-        b.table.push(
+        float_fn_table.table.push(
             TypeV::Float,
             ops::Pow::zero(TypeV::Float, vec![TypeV::Float, TypeV::Float]),
         );
 
-        return b;
+        float_fn_table
     }
 }

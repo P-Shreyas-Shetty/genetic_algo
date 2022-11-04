@@ -123,6 +123,15 @@ macro_rules! single_arg_fn_node_def {
 single_arg_fn_node_def!(Sin, f32::sin);
 single_arg_fn_node_def!(Cos, f32::cos);
 single_arg_fn_node_def!(Tan, f32::tan);
+single_arg_fn_node_def!(ASin, f32::asin);
+single_arg_fn_node_def!(ACos, f32::acos);
+single_arg_fn_node_def!(ATan, f32::atan);
+single_arg_fn_node_def!(Sinh, f32::sinh);
+single_arg_fn_node_def!(Cosh, f32::cosh);
+single_arg_fn_node_def!(Tanh, f32::tanh);
+single_arg_fn_node_def!(ASinh, f32::asinh);
+single_arg_fn_node_def!(ACosh, f32::acosh);
+single_arg_fn_node_def!(ATanh, f32::atanh);
 single_arg_fn_node_def!(Exp, f32::exp);
 single_arg_fn_node_def!(Log, f32::ln);
 single_arg_fn_node_def!(Abs, f32::abs);

@@ -70,11 +70,11 @@ impl Expr {
             root,
         }
     }
-    pub fn random<'a>(
+    pub fn random(
         arg_types: Vec<nb::TypeV>,
         rtype: nb::TypeV,
         builder_table: &nb::BuilderTable,
-        params: &'a mut nb::BuilderParams,
+        params: &'_ mut nb::BuilderParams,
     ) -> Expr {
         Expr {
             root: builder_table
@@ -95,7 +95,6 @@ impl Expr {
     }
 
     pub fn calc_err(&mut self, train_x: &[Vec<nb::Type>], train_y: &[nb::Type]) {
-
         let mut err_real: f32 = 0.0;
         let mut err_nan: f32 = 0.0;
 

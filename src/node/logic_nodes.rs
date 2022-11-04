@@ -10,21 +10,21 @@ pub struct And {
 }
 
 impl And {
-    pub fn new(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
+    pub fn create(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), lhs.get_rtype());
         assert_eq!(rhs.get_rtype(), TypeV::Bool);
         Box::new(And {
-            rtype: rtype,
+            rtype,
             arg_types: vec![lhs.get_rtype(), rhs.get_rtype()],
-            rhs: rhs,
-            lhs: lhs,
+            rhs,
+            lhs,
         })
     }
     pub fn zero(rtype: TypeV, arg_types: Vec<TypeV>) -> NodeRef {
         Box::new(And {
-            rtype: rtype,
-            arg_types: arg_types,
+            rtype,
+            arg_types,
             rhs: Null::zero(rtype),
             lhs: Null::zero(rtype),
         })
@@ -51,7 +51,7 @@ impl Node for And {
         self.rtype
     }
     fn get_arg_types(&self) -> &[TypeV] {
-        return &self.arg_types;
+        &self.arg_types
     }
     fn set_child(&mut self, child_index: usize, child: NodeRef) {
         match child_index {
@@ -84,17 +84,11 @@ impl Node for And {
     }
     fn type_check(&self) -> Result<(), TypeErr> {
         if (self.lhs.get_rtype() == TypeV::Bool) && (self.rhs.get_rtype() == TypeV::Bool) {
-            if let Err(err) = self.lhs.type_check() {
-                return Err(err);
-            } else {
-                if let Err(err) = self.rhs.type_check() {
-                    return Err(err);
-                } else {
-                    return Ok(());
-                }
-            }
+            self.lhs.type_check()?;
+            self.rhs.type_check()?;
+            Ok(())
         } else {
-            return Err(TypeErr {
+            Err(TypeErr {
                 msg: format!(
                     "And required argument of type ({:#?}, {:#?}); Got ({:#?}, {:#?})!!",
                     TypeV::Bool,
@@ -102,11 +96,11 @@ impl Node for And {
                     self.lhs.get_rtype(),
                     self.rhs.get_rtype()
                 ),
-            });
+            })
         }
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::new(self.rhs.deep_copy(), self.lhs.deep_copy())
+        Self::create(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
     fn mutant_copy<'a>(
         &self,
@@ -149,7 +143,7 @@ impl Node for And {
                     };
                     ret.set_child(0, lhs_s);
                     ret.set_child(1, rhs_s);
-                    return Some(ret);
+                    Some(ret)
                 }
             }
         }
@@ -164,27 +158,27 @@ pub struct Or {
 }
 
 impl Or {
-    pub fn new(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
+    pub fn create(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), lhs.get_rtype());
         assert_eq!(rhs.get_rtype(), TypeV::Bool);
         Box::new(Or {
-            rtype: rtype,
+            rtype,
             arg_types: vec![lhs.get_rtype(), rhs.get_rtype()],
-            rhs: rhs,
-            lhs: lhs,
+            rhs,
+            lhs,
         })
     }
     pub fn zero(rtype: TypeV, arg_types: Vec<TypeV>) -> NodeRef {
         Box::new(Or {
-            rtype: rtype,
-            arg_types: arg_types,
+            rtype,
+            arg_types,
             rhs: Null::zero(rtype),
             lhs: Null::zero(rtype),
         })
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::new(self.rhs.deep_copy(), self.lhs.deep_copy())
+        Self::create(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
 }
 
@@ -208,7 +202,7 @@ impl Node for Or {
         self.rtype
     }
     fn get_arg_types(&self) -> &[TypeV] {
-        return &self.arg_types;
+        &self.arg_types
     }
     fn set_child(&mut self, child_index: usize, child: NodeRef) {
         match child_index {
@@ -241,17 +235,11 @@ impl Node for Or {
     }
     fn type_check(&self) -> Result<(), TypeErr> {
         if (self.lhs.get_rtype() == TypeV::Bool) && (self.rhs.get_rtype() == TypeV::Bool) {
-            if let Err(err) = self.lhs.type_check() {
-                return Err(err);
-            } else {
-                if let Err(err) = self.rhs.type_check() {
-                    return Err(err);
-                } else {
-                    return Ok(());
-                }
-            }
+            self.lhs.type_check()?;
+            self.rhs.type_check()?;
+            Ok(())
         } else {
-            return Err(TypeErr {
+            Err(TypeErr {
                 msg: format!(
                     "Or required argument of type ({:#?}, {:#?}); Got ({:#?}, {:#?})!!",
                     TypeV::Bool,
@@ -259,11 +247,11 @@ impl Node for Or {
                     self.lhs.get_rtype(),
                     self.rhs.get_rtype()
                 ),
-            });
+            })
         }
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::new(self.rhs.deep_copy(), self.lhs.deep_copy())
+        Self::create(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
     fn mutant_copy<'a>(
         &self,
@@ -306,7 +294,7 @@ impl Node for Or {
                     };
                     ret.set_child(0, lhs_s);
                     ret.set_child(1, rhs_s);
-                    return Some(ret);
+                    Some(ret)
                 }
             }
         }
@@ -320,19 +308,19 @@ pub struct Not {
 }
 
 impl Not {
-    pub fn new(rhs: NodeRef) -> NodeRef {
+    pub fn create(rhs: NodeRef) -> NodeRef {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), TypeV::Bool);
         Box::new(Not {
-            rtype: rtype,
+            rtype,
             arg_types: vec![rhs.get_rtype()],
-            rhs: rhs,
+            rhs,
         })
     }
     pub fn zero(rtype: TypeV, arg_types: Vec<TypeV>) -> NodeRef {
         Box::new(Not {
-            rtype: rtype,
-            arg_types: arg_types,
+            rtype,
+            arg_types,
             rhs: Null::zero(rtype),
         })
     }
@@ -353,7 +341,7 @@ impl Node for Not {
         self.rtype
     }
     fn get_arg_types(&self) -> &[TypeV] {
-        return &self.arg_types;
+        &self.arg_types
     }
     fn set_child(&mut self, child_index: usize, child: NodeRef) {
         match child_index {
@@ -381,27 +369,21 @@ impl Node for Not {
     }
     fn type_check(&self) -> Result<(), TypeErr> {
         if self.rhs.get_rtype() == TypeV::Bool {
-            if let Err(err) = self.rhs.type_check() {
-                return Err(err);
-            } else {
-                if let Err(err) = self.rhs.type_check() {
-                    return Err(err);
-                } else {
-                    return Ok(());
-                }
-            }
+            self.rhs.type_check()?;
+            self.rhs.type_check()?;
+            Ok(())
         } else {
-            return Err(TypeErr {
+            Err(TypeErr {
                 msg: format!(
                     "Not required argument of type ({:#?}); Got ({:#?})!!",
                     TypeV::Bool,
                     self.rhs.get_rtype()
                 ),
-            });
+            })
         }
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::new(self.rhs.deep_copy())
+        Self::create(self.rhs.deep_copy())
     }
     fn mutant_copy<'a>(
         &self,
@@ -429,7 +411,7 @@ impl Node for Not {
                 params,
             )?; //If mutation return None, then return None for parent node's mutation
             ret.set_child(1, rhs);
-            return Some(ret);
+            Some(ret)
         }
     }
 }

@@ -9,22 +9,22 @@ pub struct Cond {
 }
 
 impl Cond {
-    pub fn new(cond: NodeRef, iftrue: NodeRef, iffalse: NodeRef) -> NodeRef {
+    pub fn create(cond: NodeRef, iftrue: NodeRef, iffalse: NodeRef) -> NodeRef {
         let rtype = iftrue.get_rtype();
         assert_eq!(iftrue.get_rtype(), iffalse.get_rtype());
         assert_eq!(cond.get_rtype(), TypeV::Bool);
         Box::new(Cond {
-            rtype: rtype,
+            rtype,
             arg_types: vec![cond.get_rtype(), iftrue.get_rtype(), iffalse.get_rtype()],
-            cond: cond,
-            iftrue: iftrue,
-            iffalse: iffalse,
+            cond,
+            iftrue,
+            iffalse,
         })
     }
     pub fn zero(rtype: TypeV, arg_types: Vec<TypeV>) -> NodeRef {
         Box::new(Cond {
-            rtype: rtype,
-            arg_types: arg_types,
+            rtype,
+            arg_types,
             cond: Null::zero(rtype),
             iftrue: Null::zero(rtype),
             iffalse: Null::zero(rtype),
@@ -55,7 +55,7 @@ impl Node for Cond {
         self.rtype
     }
     fn get_arg_types(&self) -> &[TypeV] {
-        return &self.arg_types;
+        &self.arg_types
     }
     fn set_child(&mut self, child_index: usize, child: NodeRef) {
         match child_index {
@@ -97,21 +97,12 @@ impl Node for Cond {
             && (self.iftrue.get_rtype() == self.rtype)
             && (self.iffalse.get_rtype() == self.rtype)
         {
-            if let Err(err) = self.cond.type_check() {
-                return Err(err);
-            } else {
-                if let Err(err) = self.iftrue.type_check() {
-                    return Err(err);
-                } else {
-                    if let Err(err) = self.iffalse.type_check() {
-                        return Err(err);
-                    } else {
-                        return Ok(());
-                    }
-                }
-            }
+            self.cond.type_check()?;
+            self.iftrue.type_check()?;
+            self.iffalse.type_check()?;
+            Ok(())
         } else {
-            return Err(TypeErr {msg: format!("Cond required argument of type ({:#?}, {:#?}, {:#?}); Got ({:#?}, {:#?}, {:#?})!!", TypeV::Bool, self.rtype, self.rtype, self.cond.get_rtype(), self.iftrue.get_rtype(), self.iffalse.get_rtype())});
+            Err(TypeErr {msg: format!("Cond required argument of type ({:#?}, {:#?}, {:#?}); Got ({:#?}, {:#?}, {:#?})!!", TypeV::Bool, self.rtype, self.rtype, self.cond.get_rtype(), self.iftrue.get_rtype(), self.iffalse.get_rtype())})
         }
     }
     fn mutant_copy<'a>(
@@ -170,13 +161,13 @@ impl Node for Cond {
                     ret.set_child(0, cond_vld);
                     ret.set_child(1, iftrue_vld);
                     ret.set_child(2, iffalse_vld);
-                    return Some(ret);
+                    Some(ret)
                 }
             }
         }
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::new(
+        Self::create(
             self.cond.deep_copy(),
             self.iftrue.deep_copy(),
             self.iffalse.deep_copy(),

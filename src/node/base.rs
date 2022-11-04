@@ -40,12 +40,12 @@ impl Type {
 
     #[allow(dead_code)]
     pub fn rand(&self) -> Type {
-        return match self {
+        match self {
             Type::Int(_) => Type::Int(rand::random()),
             Type::Float(_) => Type::Float(rand::random()),
             Type::UInt(_) => Type::UInt(rand::random()),
             Type::Bool(_) => Type::Bool(rand::random()),
-        };
+        }
     }
 
     pub fn int_range(a: i32, b: i32) -> Type {
@@ -65,12 +65,12 @@ impl Type {
         Type::Bool(rand::random())
     }
     fn random(rtype: TypeV) -> Self {
-        return match rtype {
+        match rtype {
             TypeV::Int => Type::Int(rand::random()),
             TypeV::Float => Type::Float(rand::random()),
             TypeV::UInt => Type::UInt(rand::random()),
             TypeV::Bool => Type::Bool(rand::random()),
-        };
+        }
     }
 }
 
@@ -152,14 +152,14 @@ impl Node for Null {
         format!("{}{:#?}", " ".repeat(indent), self.rtype)
     }
     fn get_rtype(&self) -> TypeV {
-        return self.rtype;
+        self.rtype
     }
     fn eval(&self, _args: &[Type]) -> Type {
         panic!("Cannot evaluate a Null block!!");
     }
 
     fn get_arg_types(&self) -> &[TypeV] {
-        return &self.arg_types;
+        &self.arg_types
     }
     fn get_type_zero(&self) -> NodeRef {
         Null::zero(self.rtype)
@@ -183,7 +183,7 @@ impl Node for Null {
         })
     }
     fn deep_copy(&self) -> NodeRef {
-        return Null::zero(self.rtype);
+        Null::zero(self.rtype)
     }
     fn mutant_copy<'a>(
         &self,
@@ -205,25 +205,16 @@ pub struct Val {
 }
 
 impl Val {
-    pub fn new(val: Type) -> NodeRef {
-        let rtype: TypeV;
-        match val {
-            Type::Bool(_) => {
-                rtype = TypeV::Bool;
-            }
-            Type::UInt(_) => {
-                rtype = TypeV::UInt;
-            }
-            Type::Int(_) => {
-                rtype = TypeV::Int;
-            }
-            Type::Float(_) => {
-                rtype = TypeV::Float;
-            }
-        }
+    pub fn create(val: Type) -> NodeRef {
+        let rtype = match val {
+            Type::Bool(_) => TypeV::Bool,
+            Type::UInt(_) => TypeV::UInt,
+            Type::Int(_) => TypeV::Int,
+            Type::Float(_) => TypeV::Float,
+        };
         Box::new(Val {
             v: val,
-            rtype: rtype,
+            rtype,
             arg_types: vec![],
         })
     }
@@ -234,11 +225,11 @@ impl Val {
             TypeV::UInt => Type::uint(0),
             TypeV::Bool => Type::bool(false),
         };
-        return Box::new(Val {
+        Box::new(Val {
             v,
             rtype,
             arg_types: vec![],
-        });
+        })
     }
 }
 
@@ -248,7 +239,7 @@ impl Node for Val {
     }
     /// On evaluation, value returns constant it represents
     fn eval(&self, _: &[Type]) -> Type {
-        return self.v;
+        self.v
     }
 
     fn get_rtype(&self) -> TypeV {
@@ -256,7 +247,7 @@ impl Node for Val {
     }
 
     fn get_arg_types(&self) -> &[TypeV] {
-        return &self.arg_types;
+        &self.arg_types
     }
     fn set_child(&mut self, _child_index: usize, _child: NodeRef) {
         panic!("Cannot set child node for Val node!!");
@@ -273,13 +264,13 @@ impl Node for Val {
         _params: &'a mut BuilderParams,
     ) -> NodeRef {
         let val = Type::random(node_rtype);
-        Val::new(val)
+        Val::create(val)
     }
     fn type_check(&self) -> Result<(), TypeErr> {
         Ok(())
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::new(self.v)
+        Self::create(self.v)
     }
     fn mutant_copy<'a>(
         &self,
@@ -291,7 +282,7 @@ impl Node for Val {
     ) -> Option<NodeRef> {
         if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
             Some(match self.v {
-                Type::Float(_) => Self::new(Type::Float(
+                Type::Float(_) => Self::create(Type::Float(
                     params
                         .randomizer
                         .gen_range(params.float_range.0..=params.float_range.1),
@@ -311,10 +302,10 @@ pub struct Var {
 }
 
 impl Var {
-    pub fn new(idx: usize, rtype: TypeV) -> NodeRef {
+    pub fn create(idx: usize, rtype: TypeV) -> NodeRef {
         Box::new(Var {
-            idx: idx,
-            rtype: rtype,
+            idx,
+            rtype,
             arg_types: vec![],
         })
     }
@@ -325,19 +316,19 @@ impl Node for Var {
         format!("{}x[{}]", " ".repeat(indent), self.idx)
     }
     fn eval(&self, args: &[Type]) -> Type {
-        return args[self.idx];
+        args[self.idx]
     }
     fn get_rtype(&self) -> TypeV {
         self.rtype
     }
     fn get_arg_types(&self) -> &[TypeV] {
-        return &self.arg_types;
+        &self.arg_types
     }
     fn set_child(&mut self, _child_index: usize, _child: NodeRef) {
         panic!("Cannot set child node for Var node!!");
     }
     fn get_type_zero(&self) -> NodeRef {
-        Self::new(0, self.rtype)
+        Self::create(0, self.rtype)
     }
     fn build_random_node<'a>(
         &self,
@@ -351,13 +342,13 @@ impl Node for Var {
             .filter(|x| arg_types[*x] == node_rtype) //Only arguments with same type as rtype are to be chosen
             .collect();
         let vindex = *valid_indices.choose(&mut params.randomizer).unwrap();
-        return Var::new(vindex, node_rtype);
+        Var::create(vindex, node_rtype)
     }
     fn type_check(&self) -> Result<(), TypeErr> {
         Ok(())
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::new(self.idx, self.rtype)
+        Self::create(self.idx, self.rtype)
     }
     fn mutant_copy<'a>(
         &self,
@@ -375,7 +366,7 @@ impl Node for Var {
             if vindex == self.idx {
                 None
             } else {
-                Some(Self::new(vindex, self.rtype))
+                Some(Self::create(vindex, self.rtype))
             }
         } else {
             None
@@ -409,7 +400,7 @@ impl BuilderTable {
             rtype_uint: vec![],
             rtype_float: vec![],
             val_node: Val::zero(TypeV::Bool),
-            var_node: Var::new(0, TypeV::Bool),
+            var_node: Var::create(0, TypeV::Bool),
         }
     }
 
@@ -503,7 +494,6 @@ impl BuilderParams {
     }
     pub fn get_mut_prob(&self, base_prob: f32, depth: usize) -> f32 {
         let s = (usize::pow(2, depth as u32) as f32) * base_prob;
-        let prob = 1.0 / (1.0 + f32::exp(-5.5 * (s - 0.7))); //FIXME: Maybe this is not a good function for probability growth
-        return prob;
+        1.0 / (1.0 + f32::exp(-5.5 * (s - 0.7))) //FIXME: Maybe this is not a good function for probability growth
     }
 }
