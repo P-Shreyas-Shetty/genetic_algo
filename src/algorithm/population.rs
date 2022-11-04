@@ -64,10 +64,16 @@ impl Population {
         }
     }
 
+    #[allow(dead_code)]
+    pub fn calc_err(&mut self, train_x: &[Vec<nb::Type>], train_y: &[nb::Type]) {
+        for p in self.p.iter_mut() {
+            p.calc_err(train_x, train_y);
+        }
+    }
     ///Sorts the population accordig to fitness,
     /// if the fitness is uncalculated, panics
     #[allow(dead_code)]
     pub fn sort_population(&mut self) {
-        todo!()
+        self.p.sort_by(|a, b| a.error.cmp(&b.error));
     }
 }

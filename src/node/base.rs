@@ -85,13 +85,16 @@ impl std::fmt::Display for Type {
     }
 }
 
-pub type NodeRef = Box<dyn Node>;
 #[derive(Debug)]
 pub struct TypeErr {
     pub msg: String,
 }
 
+pub type NodeRef = Box<dyn Node>;
+
 /// This is the top level Node trait
+/// `Node` is not to be initiliazed directly, but
+/// rather `NodeRef` that is dyn object of trait is to be used
 pub trait Node {
     /// each node is evaluated and value is passed up the tree
     fn eval(&self, args: &[Type]) -> Type;
