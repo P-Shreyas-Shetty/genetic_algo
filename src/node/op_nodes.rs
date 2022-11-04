@@ -9,7 +9,7 @@ pub struct Add {
 }
 
 impl Add {
-    pub fn create(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
+    pub fn alloc(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), lhs.get_rtype());
         Box::new(Add {
@@ -104,7 +104,7 @@ impl Node for Add {
         }
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::create(self.rhs.deep_copy(), self.lhs.deep_copy())
+        Self::alloc(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
     fn mutant_copy<'a>(
         &self,
@@ -161,7 +161,7 @@ pub struct Sub {
 }
 
 impl Sub {
-    pub fn create(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
+    pub fn alloc(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), lhs.get_rtype());
         Box::new(Sub {
@@ -254,7 +254,7 @@ impl Node for Sub {
         }
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::create(self.rhs.deep_copy(), self.lhs.deep_copy())
+        Self::alloc(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
     fn mutant_copy<'a>(
         &self,
@@ -311,7 +311,7 @@ pub struct Mul {
 }
 
 impl Mul {
-    pub fn create(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
+    pub fn alloc(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), lhs.get_rtype());
         Box::new(Mul {
@@ -404,7 +404,7 @@ impl Node for Mul {
         }
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::create(self.rhs.deep_copy(), self.lhs.deep_copy())
+        Self::alloc(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
     fn mutant_copy<'a>(
         &self,
@@ -462,7 +462,7 @@ pub struct Div {
 }
 
 impl Div {
-    pub fn create(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
+    pub fn alloc(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), lhs.get_rtype());
         Box::new(Div {
@@ -558,7 +558,7 @@ impl Node for Div {
         }
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::create(self.rhs.deep_copy(), self.lhs.deep_copy())
+        Self::alloc(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
     fn mutant_copy<'a>(
         &self,
@@ -615,7 +615,7 @@ pub struct Pow {
 }
 
 impl Pow {
-    pub fn create(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
+    pub fn alloc(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), lhs.get_rtype());
         Box::new(Pow {
@@ -711,7 +711,7 @@ impl Node for Pow {
         }
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::create(self.rhs.deep_copy(), self.lhs.deep_copy())
+        Self::alloc(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
     fn mutant_copy<'a>(
         &self,

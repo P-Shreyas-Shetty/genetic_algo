@@ -9,7 +9,7 @@ pub struct Cond {
 }
 
 impl Cond {
-    pub fn create(cond: NodeRef, iftrue: NodeRef, iffalse: NodeRef) -> NodeRef {
+    pub fn alloc(cond: NodeRef, iftrue: NodeRef, iffalse: NodeRef) -> NodeRef {
         let rtype = iftrue.get_rtype();
         assert_eq!(iftrue.get_rtype(), iffalse.get_rtype());
         assert_eq!(cond.get_rtype(), TypeV::Bool);
@@ -167,7 +167,7 @@ impl Node for Cond {
         }
     }
     fn deep_copy(&self) -> NodeRef {
-        Self::create(
+        Self::alloc(
             self.cond.deep_copy(),
             self.iftrue.deep_copy(),
             self.iffalse.deep_copy(),
