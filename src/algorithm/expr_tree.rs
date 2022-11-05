@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 use super::super::node::base as nb;
 use std::cmp::Ordering;
+use num::{Integer, Unsigned, Float};
 
 /// This type represents the Error calculated
 /// by default, its Uncalculated

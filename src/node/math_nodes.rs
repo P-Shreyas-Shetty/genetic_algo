@@ -1,23 +1,24 @@
 use super::base::*;
 use rand::Rng;
+use num::{Integer, Unsigned, Float};
 
 macro_rules! single_arg_fn_node_def {
     ($type_name: ident, $expr_fn: expr) => {
-        pub struct $type_name {
-            arg: NodeRef,
+        pub struct $type_name<F: Float, I: Integer, U: Unsigned> {
+            arg: NodeRef<F,I,U>,
             arg_types: Vec<TypeV>,
         }
 
-        impl $type_name {
-            pub fn zero() -> NodeRef {
+        impl<F: Float, I: Integer, U: Unsigned> $type_name<F,I,U> {
+            pub fn zero() -> NodeRef<F,I,U> {
                 Box::new($type_name {
                     arg: Null::zero(TypeV::Float),
                     arg_types: vec![TypeV::Float],
                 })
             }
         }
-        impl Node for $type_name {
-            fn eval(&self, args: &[Type]) -> Type {
+        impl<F: Float, I: Integer, U: Unsigned> Node<F,I,U> for $type_name<F,I,U> {
+            fn eval(&self, args: &[Type<F,I,U>]) -> Type<F,I,U> {
                 if let Type::Float(a) = self.arg.eval(args) {
                     return Type::Float($expr_fn(a));
                 } else {
@@ -36,23 +37,23 @@ macro_rules! single_arg_fn_node_def {
             fn get_arg_types(&self) -> &[TypeV] {
                 return &self.arg_types;
             }
-            fn set_child(&mut self, child_index: usize, child: NodeRef) {
+            fn set_child(&mut self, child_index: usize, child: NodeRef<F,I,U>) {
                 match child_index {
                     0 => self.arg = child,
                     _ => unreachable!(),
                 }
             }
-            fn get_type_zero(&self) -> NodeRef {
+            fn get_type_zero(&self) -> NodeRef<F,I,U> {
                 Self::zero()
             }
             fn build_random_node<'a>(
                 &self,
-                build_table: &'a BuilderTable,
+                build_table: &'a BuilderTable<F,I,U>,
                 arg_types: &[TypeV],
                 node_rtype: TypeV,
                 depth: usize,
-                params: &'a mut BuilderParams,
-            ) -> NodeRef {
+                params: &'a mut BuilderParams<F,I,U>,
+            ) -> NodeRef<F,I,U> {
                 let mut node = Self::get_type_zero(self);
                 let arg = build_table
                     .get_rand_node(depth + 1, node_rtype, params)
@@ -60,7 +61,7 @@ macro_rules! single_arg_fn_node_def {
                 node.set_child(0, arg);
                 node
             }
-            fn deep_copy(&self) -> NodeRef {
+            fn deep_copy(&self) -> NodeRef<F,I,U> {
                 let mut ret = Self::zero();
                 ret.set_child(0, self.arg.deep_copy());
                 return ret;
@@ -70,9 +71,9 @@ macro_rules! single_arg_fn_node_def {
                 probability: f32,
                 node_depth: usize,
                 arg_types: &[TypeV],
-                build_table: &'a BuilderTable,
-                params: &'a mut BuilderParams,
-            ) -> Option<NodeRef> {
+                build_table: &'a BuilderTable<F,I,U>,
+                params: &'a mut BuilderParams<F,I,U>,
+            ) -> Option<NodeRef<F,I,U>> {
                 if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
                     Some(self.build_random_node(
                         build_table,
@@ -110,8 +111,8 @@ macro_rules! single_arg_fn_node_def {
             }
         }
 
-        impl FnNode for $type_name {
-            fn set_args(&mut self, mut args: Vec<NodeRef>) {
+        impl<F: Float, I: Integer, U: Unsigned> FnNode<F,I,U> for $type_name<F,I,U> {
+            fn set_args(&mut self, mut args: Vec<NodeRef<F,I,U>>) {
                 if let Some(a0) = args.pop() {
                     self.arg = a0;
                 }

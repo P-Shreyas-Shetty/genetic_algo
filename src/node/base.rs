@@ -1,7 +1,10 @@
 #![allow(dead_code)]
+use std::marker::PhantomData;
 use rand;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
+use num::{Integer, Unsigned, Float};
+
 
 /// Type value
 #[derive(std::fmt::Debug, Clone, Copy, std::cmp::PartialEq, std::cmp::Eq, std::hash::Hash)]
@@ -14,32 +17,32 @@ pub enum TypeV {
 
 /// Wrapper of Types possible
 #[derive(std::fmt::Debug, Clone, Copy)]
-pub enum Type {
-    Int(i32),
-    Float(f32),
-    UInt(u32),
+pub enum Type<F:Float, I:Integer, U:Unsigned> {
+    Float(F),
+    Int(I),
+    UInt(U),
     Bool(bool),
 }
 
-impl Type {
+impl<F:Float, I:Integer, U:Unsigned> Type<F,I,U> {
     //These methods give "Zero" values of the type
     //I intend to use this as a marker type
     //I know its little wasteful, but its fine; I think
-    pub fn int(val: i32) -> Type {
+    pub fn int(val: I) -> Self {
         Type::Int(val)
     }
-    pub fn float(val: f32) -> Type {
+    pub fn float(val: F) -> Self {
         Type::Float(val)
     }
-    pub fn uint(val: u32) -> Type {
+    pub fn uint(val: U) -> Self{
         Type::UInt(val)
     }
-    pub fn bool(val: bool) -> Type {
+    pub fn bool(val: bool) -> Self {
         Type::Bool(val)
     }
 
     #[allow(dead_code)]
-    pub fn rand(&self) -> Type {
+    pub fn rand(&self) -> Self {
         match self {
             Type::Int(_) => Type::Int(rand::random()),
             Type::Float(_) => Type::Float(rand::random()),
@@ -48,20 +51,20 @@ impl Type {
         }
     }
 
-    pub fn int_range(a: i32, b: i32) -> Type {
+    pub fn int_range(a: I, b: I) -> Self {
         let mut rng = thread_rng();
         Type::Int(rng.gen_range(a..=b))
     }
-    pub fn float_range(a: f32, b: f32) -> Type {
+    pub fn float_range(a: F, b: F) -> Self {
         let mut rng = thread_rng();
         Type::Float(rng.gen_range(a..=b))
     }
 
-    pub fn uint_range(a: u32, b: u32) -> Type {
+    pub fn uint_range(a: U, b: U) -> Self {
         let mut rng = thread_rng();
         Type::UInt(rng.gen_range(a..=b))
     }
-    pub fn bool_rand() -> Type {
+    pub fn bool_rand() -> Self {
         Type::Bool(rand::random())
     }
     fn random(rtype: TypeV) -> Self {
@@ -74,7 +77,7 @@ impl Type {
     }
 }
 
-impl std::fmt::Display for Type {
+impl<F:Float, I:Integer, U:Unsigned> std::fmt::Display for Type<F,I,U> {
     fn fmt(&self, ft: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Type::Int(i) => write!(ft, "{}I", i),
@@ -90,91 +93,93 @@ pub struct TypeErr {
     pub msg: String,
 }
 
-pub type NodeRef = Box<dyn Node>;
+pub type NodeRef<F:Float, I:Integer, U:Unsigned> = Box<dyn Node<F,I,U>>;
 
 /// This is the top level Node trait
 /// `Node` is not to be initiliazed directly, but
 /// rather `NodeRef` that is dyn object of trait is to be used
-pub trait Node {
+pub trait Node<F:Float, I:Integer, U:Unsigned> {
     /// each node is evaluated and value is passed up the tree
-    fn eval(&self, args: &[Type]) -> Type;
+    fn eval(&self, args: &[Type<F,I,U>]) -> Type<F,I,U>;
     fn to_str(&self, indent: usize) -> String;
     fn get_rtype(&self) -> TypeV;
     fn get_arg_types(&self) -> &[TypeV];
-    fn set_child(&mut self, child_index: usize, child: NodeRef);
-    fn get_type_zero(&self) -> NodeRef;
+    fn set_child(&mut self, child_index: usize, child: NodeRef<F,I,U>);
+    fn get_type_zero(&self) -> NodeRef<F,I,U>;
     fn build_random_node<'a>(
         &self,
-        build_table: &'a BuilderTable,
+        build_table: &'a BuilderTable<F,I,U>,
         arg_types: &[TypeV],
         node_rtype: TypeV,
         depth: usize,
-        params: &'a mut BuilderParams,
-    ) -> NodeRef;
-    fn deep_copy(&self) -> NodeRef;
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> NodeRef<F,I,U>;
+    fn deep_copy(&self) -> NodeRef<F,I,U>;
     fn mutant_copy<'a>(
         &self,
         probability: f32,
         node_depth: usize,
         arg_types: &[TypeV],
-        build_table: &'a BuilderTable,
-        params: &'a mut BuilderParams,
-    ) -> Option<NodeRef>;
+        build_table: &'a BuilderTable<F,I,U>,
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> Option<NodeRef<F,I,U>>;
     fn type_check(&self) -> Result<(), TypeErr>;
 }
 
 /// Special FnNode trait for function node
 /// They will define fn_eval function, which'll be used
 /// instead of having function member or other mechanisms
-pub trait FnNode: Node {
+pub trait FnNode<F:Float, I:Integer, U:Unsigned>: Node<F,I,U> {
     //fn get_arg_types(&self) -> Vec<TypeV>;
-    fn set_args(&mut self, args: Vec<NodeRef>);
+    fn set_args(&mut self, args: Vec<NodeRef<F,I,U>>);
 }
 
 /// A NUll node. This node does nothing
 /// used only for setting "zero" node
-pub struct Null {
+pub struct Null<F:Float, I:Integer, U:Unsigned> {
     rtype: TypeV,
     arg_types: Vec<TypeV>,
+    val: Type<F,I,U>
 }
 
-impl Null {
-    pub fn zero(rtype: TypeV) -> NodeRef {
+impl<F:Float, I:Integer, U:Unsigned> Null<F,I,U> {
+    pub fn zero(rtype: TypeV) -> NodeRef<F,I,U> {
         Box::new(Null {
             rtype,
             arg_types: vec![],
+            val: Type::Bool(false)
         })
     }
 }
 
-impl Node for Null {
+impl<F:Float, I:Integer, U:Unsigned> Node<F,I,U> for Null<F,I,U> {
     fn to_str(&self, indent: usize) -> String {
         format!("{}{:#?}", " ".repeat(indent), self.rtype)
     }
     fn get_rtype(&self) -> TypeV {
         self.rtype
     }
-    fn eval(&self, _args: &[Type]) -> Type {
+    fn eval(&self, _args: &[Type<F,I,U>]) -> Type<F,I,U> {
         panic!("Cannot evaluate a Null block!!");
     }
 
     fn get_arg_types(&self) -> &[TypeV] {
         &self.arg_types
     }
-    fn get_type_zero(&self) -> NodeRef {
+    fn get_type_zero(&self) -> NodeRef<F,I,U> {
         Null::zero(self.rtype)
     }
-    fn set_child(&mut self, _child_index: usize, _child: NodeRef) {
+    fn set_child(&mut self, _child_index: usize, _child: NodeRef<F,I,U>) {
         panic!("Cannot set child node for Null node!!");
     }
     fn build_random_node<'a>(
         &self,
-        _build_table: &'a BuilderTable,
+        _build_table: &'a BuilderTable<F,I,U>,
         _arg_types: &[TypeV],
         node_rtype: TypeV,
         _depth: usize,
-        _params: &'a mut BuilderParams,
-    ) -> NodeRef {
+        _params: &'a mut BuilderParams<F,I,U>,
+    ) -> NodeRef<F,I,U> {
         Null::zero(node_rtype)
     }
     fn type_check(&self) -> Result<(), TypeErr> {
@@ -182,7 +187,7 @@ impl Node for Null {
             msg: "Null node is invalid!!".to_string(),
         })
     }
-    fn deep_copy(&self) -> NodeRef {
+    fn deep_copy(&self) -> NodeRef<F,I,U> {
         Null::zero(self.rtype)
     }
     fn mutant_copy<'a>(
@@ -190,22 +195,22 @@ impl Node for Null {
         _probability: f32,
         _node_depth: usize,
         _arg_types: &[TypeV],
-        _build_table: &'a BuilderTable,
-        _params: &'a mut BuilderParams,
-    ) -> Option<NodeRef> {
+        _build_table: &'a BuilderTable<F,I,U>,
+        _params: &'a mut BuilderParams<F,I,U>,
+    ) -> Option<NodeRef<F,I,U>> {
         None
     }
 }
 
 /// Val node for storing constant values
-pub struct Val {
+pub struct Val<F:Float, I:Integer, U:Unsigned> {
     rtype: TypeV,
-    pub v: Type,
+    pub v: Type<F,I,U>,
     arg_types: Vec<TypeV>,
 }
 
-impl Val {
-    pub fn make(val: Type) -> NodeRef {
+impl<F:Float, I:Integer, U:Unsigned> Val<F,I,U> {
+    pub fn make(val: Type<F,I,U>) -> NodeRef<F,I,U> {
         let rtype = match val {
             Type::Bool(_) => TypeV::Bool,
             Type::UInt(_) => TypeV::UInt,
@@ -218,7 +223,7 @@ impl Val {
             arg_types: vec![],
         })
     }
-    pub fn zero(rtype: TypeV) -> NodeRef {
+    pub fn zero(rtype: TypeV) -> NodeRef<F,I,U> {
         let v = match rtype {
             TypeV::Int => Type::int(0),
             TypeV::Float => Type::float(0.0),
@@ -233,12 +238,12 @@ impl Val {
     }
 }
 
-impl Node for Val {
+impl<F:Float, I:Integer, U:Unsigned> Node<F,I,U> for Val<F,I,U> {
     fn to_str(&self, indent: usize) -> String {
         format!("{}{}", " ".repeat(indent), self.v)
     }
     /// On evaluation, value returns constant it represents
-    fn eval(&self, _: &[Type]) -> Type {
+    fn eval(&self, _: &[Type<F,I,U>]) -> Type<F,I,U> {
         self.v
     }
 
@@ -249,27 +254,27 @@ impl Node for Val {
     fn get_arg_types(&self) -> &[TypeV] {
         &self.arg_types
     }
-    fn set_child(&mut self, _child_index: usize, _child: NodeRef) {
+    fn set_child(&mut self, _child_index: usize, _child: NodeRef<F,I,U>) {
         panic!("Cannot set child node for Val node!!");
     }
-    fn get_type_zero(&self) -> NodeRef {
+    fn get_type_zero(&self) -> NodeRef<F,I,U> {
         Self::zero(self.rtype)
     }
     fn build_random_node<'a>(
         &self,
-        _build_table: &'a BuilderTable,
+        _build_table: &'a BuilderTable<F,I,U>,
         _arg_types: &[TypeV],
         node_rtype: TypeV,
         _depth: usize,
-        _params: &'a mut BuilderParams,
-    ) -> NodeRef {
+        _params: &'a mut BuilderParams<F,I,U>,
+    ) -> NodeRef<F,I,U> {
         let val = Type::random(node_rtype);
         Val::make(val)
     }
     fn type_check(&self) -> Result<(), TypeErr> {
         Ok(())
     }
-    fn deep_copy(&self) -> NodeRef {
+    fn deep_copy(&self) -> NodeRef<F,I,U> {
         Self::make(self.v)
     }
     fn mutant_copy<'a>(
@@ -277,9 +282,9 @@ impl Node for Val {
         probability: f32,
         node_depth: usize,
         _arg_types: &[TypeV],
-        _build_table: &'a BuilderTable,
-        params: &'a mut BuilderParams,
-    ) -> Option<NodeRef> {
+        _build_table: &'a BuilderTable<F,I,U>,
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> Option<NodeRef<F,I,U>> {
         if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
             Some(match self.v {
                 Type::Float(_) => Self::make(Type::Float(
@@ -295,27 +300,29 @@ impl Node for Val {
     }
 }
 
-pub struct Var {
+pub struct Var<F:Float, I:Integer, U:Unsigned> {
     rtype: TypeV,
     pub idx: usize,
     arg_types: Vec<TypeV>,
+    _mark: PhantomData<(F,I,U)>
 }
 
-impl Var {
-    pub fn make(idx: usize, rtype: TypeV) -> NodeRef {
+impl<F:Float, I:Integer, U:Unsigned> Var<F,I,U> {
+    pub fn make(idx: usize, rtype: TypeV) -> NodeRef<F,I,U> {
         Box::new(Var {
             idx,
             rtype,
             arg_types: vec![],
+            _mark: PhantomData::default()
         })
     }
 }
 
-impl Node for Var {
+impl<F:Float, I:Integer, U:Unsigned> Node<F,I,U> for Var<F,I,U> {
     fn to_str(&self, indent: usize) -> String {
         format!("{}x[{}]", " ".repeat(indent), self.idx)
     }
-    fn eval(&self, args: &[Type]) -> Type {
+    fn eval(&self, args: &[Type<F,I,U>]) -> Type<F,I,U> {
         args[self.idx]
     }
     fn get_rtype(&self) -> TypeV {
@@ -324,20 +331,20 @@ impl Node for Var {
     fn get_arg_types(&self) -> &[TypeV] {
         &self.arg_types
     }
-    fn set_child(&mut self, _child_index: usize, _child: NodeRef) {
+    fn set_child(&mut self, _child_index: usize, _child: NodeRef<F,I,U>) {
         panic!("Cannot set child node for Var node!!");
     }
-    fn get_type_zero(&self) -> NodeRef {
+    fn get_type_zero(&self) -> NodeRef<F,I,U> {
         Self::make(0, self.rtype)
     }
     fn build_random_node<'a>(
         &self,
-        _build_table: &'a BuilderTable,
+        _build_table: &'a BuilderTable<F,I,U>,
         arg_types: &[TypeV],
         node_rtype: TypeV,
         _depth: usize,
-        params: &'a mut BuilderParams,
-    ) -> NodeRef {
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> NodeRef<F,I,U> {
         let valid_indices: Vec<_> = (0..arg_types.len())
             .filter(|x| arg_types[*x] == node_rtype) //Only arguments with same type as rtype are to be chosen
             .collect();
@@ -347,7 +354,7 @@ impl Node for Var {
     fn type_check(&self) -> Result<(), TypeErr> {
         Ok(())
     }
-    fn deep_copy(&self) -> NodeRef {
+    fn deep_copy(&self) -> NodeRef<F,I,U> {
         Self::make(self.idx, self.rtype)
     }
     fn mutant_copy<'a>(
@@ -355,9 +362,9 @@ impl Node for Var {
         probability: f32,
         node_depth: usize,
         arg_types: &[TypeV],
-        _build_table: &'a BuilderTable,
-        params: &'a mut BuilderParams,
-    ) -> Option<NodeRef> {
+        _build_table: &'a BuilderTable<F,I,U>,
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> Option<NodeRef<F,I,U>> {
         if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
             let valid_indices: Vec<_> = (0..arg_types.len())
                 .filter(|x| arg_types[*x] == self.rtype) //Only arguments with same type as rtype are to be chosen
@@ -374,26 +381,26 @@ impl Node for Var {
     }
 }
 
-pub struct BuilderTable {
-    rtype_bool: Vec<NodeRef>,
-    rtype_int: Vec<NodeRef>,
-    rtype_uint: Vec<NodeRef>,
-    rtype_float: Vec<NodeRef>,
-    val_node: NodeRef,
-    var_node: NodeRef,
+pub struct BuilderTable<F:Float, I:Integer, U:Unsigned> {
+    rtype_bool: Vec<NodeRef<F,I,U>>,
+    rtype_int: Vec<NodeRef<F,I,U>>,
+    rtype_uint: Vec<NodeRef<F,I,U>>,
+    rtype_float: Vec<NodeRef<F,I,U>>,
+    val_node: NodeRef<F,I,U>,
+    var_node: NodeRef<F,I,U>,
 }
 
-pub struct BuilderParams {
+pub struct BuilderParams<F:Float, I:Integer, U:Unsigned> {
     pub max_depth: usize,
     pub randomizer: rand::prelude::ThreadRng,
     pub termination_probability: f32,
-    pub float_range: (f32, f32),
-    pub int_range: (i32, i32),
-    pub uint_range: (u32, u32),
+    pub float_range: (F, F),
+    pub int_range: (I, I),
+    pub uint_range: (U, U),
 }
 
-impl BuilderTable {
-    pub fn new() -> BuilderTable {
+impl<F:Float, I:Integer, U:Unsigned> BuilderTable<F,I,U> {
+    pub fn new() -> BuilderTable<F,I,U> {
         BuilderTable {
             rtype_bool: vec![],
             rtype_int: vec![],
@@ -404,7 +411,7 @@ impl BuilderTable {
         }
     }
 
-    pub fn push(&mut self, ty: TypeV, node: NodeRef) {
+    pub fn push(&mut self, ty: TypeV, node: NodeRef<F,I,U>) {
         match ty {
             TypeV::Bool => self.rtype_bool.push(node),
             TypeV::Int => self.rtype_int.push(node),
@@ -417,8 +424,8 @@ impl BuilderTable {
         &self,
         depth: usize,
         rtype: TypeV,
-        params: &'a mut BuilderParams,
-    ) -> &NodeRef {
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> &NodeRef<F,I,U> {
         if (params.randomizer.gen::<f32>() <= params.termination_probability)
             || (depth >= params.max_depth)
         {
@@ -438,9 +445,9 @@ impl BuilderTable {
     }
 }
 
-/// Builder pattern for BuilderParams
-impl BuilderParams {
-    pub fn new() -> BuilderParams {
+/// Builder pattern for BuilderParams<F,I,U>
+impl<F:Float, I:Integer, U:Unsigned> BuilderParams<F,I,U> {
+    pub fn new() -> BuilderParams<F,I,U> {
         BuilderParams {
             max_depth: 10,                 //Set this value as default
             termination_probability: 0.05, //set early termination probability as 5% in the beginning
@@ -461,17 +468,17 @@ impl BuilderParams {
         self
     }
 
-    pub fn float_range(mut self, a: f32, b: f32) -> Self {
+    pub fn float_range(mut self, a: F, b: F) -> Self {
         self.float_range = (a, b);
         self
     }
 
-    pub fn int_range(mut self, a: i32, b: i32) -> Self {
+    pub fn int_range(mut self, a: I, b: I) -> Self {
         self.int_range = (a, b);
         self
     }
 
-    pub fn uint_range(mut self, a: u32, b: u32) -> Self {
+    pub fn uint_range(mut self, a: U, b: U) -> Self {
         self.uint_range = (a, b);
         self
     }
@@ -479,14 +486,14 @@ impl BuilderParams {
     pub fn set_max_depth(&mut self, val: usize) {
         self.max_depth = val;
     }
-    pub fn set_float_range(&mut self, a: f32, b: f32) {
+    pub fn set_float_range(&mut self, a: F, b: F) {
         self.float_range = (a, b);
     }
-    pub fn set_int_range(&mut self, a: i32, b: i32) {
+    pub fn set_int_range(&mut self, a: I, b: I) {
         self.int_range = (a, b);
     }
 
-    pub fn set_uint_range(&mut self, a: u32, b: u32) {
+    pub fn set_uint_range(&mut self, a: U, b: U) {
         self.uint_range = (a, b);
     }
     pub fn set_termination_probability(&mut self, val: f32) {

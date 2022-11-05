@@ -1,5 +1,6 @@
 use super::base::*;
 use rand::Rng;
+use num::{Integer, Unsigned, Float};
 pub struct Cond {
     pub rtype: TypeV,
     pub arg_types: Vec<TypeV>,

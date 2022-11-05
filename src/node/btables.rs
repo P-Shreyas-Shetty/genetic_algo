@@ -1,13 +1,14 @@
 use super::base::*;
 use super::math_nodes as math;
 use super::op_nodes as ops;
+use num::{Integer, Unsigned, Float};
 
 /// function table for floating point numbers
-pub struct FloatFnTable {
-    pub table: BuilderTable,
+pub struct FloatFnTable<F: Float, I: Integer, U: Unsigned> {
+    pub table: BuilderTable<F,I,U>,
 }
 
-impl FloatFnTable {
+impl<F: Float, I: Integer, U: Unsigned> FloatFnTable<F,I,U> {
     pub fn new() -> Self {
         let mut float_fn_table = Self {
             table: BuilderTable::new(),

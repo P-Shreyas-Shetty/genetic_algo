@@ -1,15 +1,16 @@
 use super::base::*;
 use rand::Rng;
+use num::{Integer, Unsigned, Float};
 
-pub struct Add {
+pub struct Add<F: Float, I: Integer, U: Unsigned> {
     pub rtype: TypeV,
     pub arg_types: Vec<TypeV>,
-    pub rhs: NodeRef,
-    pub lhs: NodeRef,
+    pub rhs: NodeRef<F,I,U>,
+    pub lhs: NodeRef<F,I,U>,
 }
 
-impl Add {
-    pub fn make(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
+impl<F: Float, I: Integer, U: Unsigned> Add<F,I,U> {
+    pub fn make(rhs: NodeRef<F,I,U>, lhs: NodeRef<F,I,U>) -> NodeRef<F,I,U> {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), lhs.get_rtype());
         Box::new(Add {
@@ -19,7 +20,7 @@ impl Add {
             lhs,
         })
     }
-    pub fn zero(rtype: TypeV, arg_types: Vec<TypeV>) -> NodeRef {
+    pub fn zero(rtype: TypeV, arg_types: Vec<TypeV>) -> NodeRef<F,I,U> {
         Box::new(Add {
             rtype,
             arg_types,
@@ -29,7 +30,7 @@ impl Add {
     }
 }
 
-impl Node for Add {
+impl<F: Float, I: Integer, U: Unsigned> Node<F,I,U> for Add<F,I,U> {
     fn to_str(&self, indent: usize) -> String {
         " ".repeat(indent)
             + "+\n"
@@ -37,7 +38,7 @@ impl Node for Add {
             + "\n"
             + &self.rhs.to_str(indent + 1)
     }
-    fn eval(&self, args: &[Type]) -> Type {
+    fn eval(&self, args: &[Type<F,I,U>]) -> Type<F,I,U> {
         let r = self.rhs.eval(args);
         let l = self.lhs.eval(args);
         match (r, l) {
@@ -54,7 +55,7 @@ impl Node for Add {
         &self.arg_types
     }
 
-    fn set_child(&mut self, child_index: usize, child: NodeRef) {
+    fn set_child(&mut self, child_index: usize, child: NodeRef<F,I,U>) {
         match child_index {
             0 => self.lhs = child,
             1 => self.rhs = child,
@@ -62,17 +63,17 @@ impl Node for Add {
         }
     }
 
-    fn get_type_zero(&self) -> NodeRef {
+    fn get_type_zero(&self) -> NodeRef<F,I,U> {
         Self::zero(self.rtype, self.arg_types.clone())
     }
     fn build_random_node<'a>(
         &self,
-        build_table: &'a BuilderTable,
+        build_table: &'a BuilderTable<F,I,U>,
         arg_types: &[TypeV],
         node_rtype: TypeV,
         depth: usize,
-        params: &'a mut BuilderParams,
-    ) -> NodeRef {
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> NodeRef<F,I,U> {
         let mut node = Self::get_type_zero(self);
         let lhs = build_table
             .get_rand_node(depth + 1, node_rtype, params)
@@ -103,7 +104,7 @@ impl Node for Add {
             })
         }
     }
-    fn deep_copy(&self) -> NodeRef {
+    fn deep_copy(&self) -> NodeRef<F,I,U> {
         Self::make(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
     fn mutant_copy<'a>(
@@ -111,9 +112,9 @@ impl Node for Add {
         probability: f32,
         node_depth: usize,
         arg_types: &[TypeV],
-        build_table: &'a BuilderTable,
-        params: &'a mut BuilderParams,
-    ) -> Option<NodeRef> {
+        build_table: &'a BuilderTable<F,I,U>,
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> Option<NodeRef<F,I,U>> {
         if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
             Some(self.build_random_node(
                 build_table,
@@ -153,15 +154,15 @@ impl Node for Add {
     }
 }
 
-pub struct Sub {
+pub struct Sub<F: Float, I: Integer, U: Unsigned> {
     pub rtype: TypeV,
     pub arg_types: Vec<TypeV>,
-    pub rhs: NodeRef,
-    pub lhs: NodeRef,
+    pub rhs: NodeRef<F,I,U>,
+    pub lhs: NodeRef<F,I,U>,
 }
 
-impl Sub {
-    pub fn make(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
+impl<F: Float, I: Integer, U: Unsigned> Sub<F,I,U> {
+    pub fn make(rhs: NodeRef<F,I,U>, lhs: NodeRef<F,I,U>) -> NodeRef<F,I,U> {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), lhs.get_rtype());
         Box::new(Sub {
@@ -171,7 +172,7 @@ impl Sub {
             lhs,
         })
     }
-    pub fn zero(rtype: TypeV, arg_types: Vec<TypeV>) -> NodeRef {
+    pub fn zero(rtype: TypeV, arg_types: Vec<TypeV>) -> NodeRef<F,I,U> {
         Box::new(Sub {
             rtype,
             arg_types,
@@ -181,7 +182,7 @@ impl Sub {
     }
 }
 
-impl Node for Sub {
+impl<F: Float, I: Integer, U: Unsigned> Node<F,I,U> for Sub<F,I,U> {
     fn to_str(&self, indent: usize) -> String {
         " ".repeat(indent)
             + "-\n"
@@ -189,7 +190,7 @@ impl Node for Sub {
             + "\n"
             + &self.rhs.to_str(indent + 1)
     }
-    fn eval(&self, args: &[Type]) -> Type {
+    fn eval(&self, args: &[Type<F,I,U>]) -> Type<F,I,U> {
         let r = self.rhs.eval(args);
         let l = self.lhs.eval(args);
         match (r, l) {
@@ -205,24 +206,24 @@ impl Node for Sub {
     fn get_arg_types(&self) -> &[TypeV] {
         &self.arg_types
     }
-    fn set_child(&mut self, child_index: usize, child: NodeRef) {
+    fn set_child(&mut self, child_index: usize, child: NodeRef<F,I,U>) {
         match child_index {
             0 => self.lhs = child,
             1 => self.rhs = child,
             _ => unreachable!(),
         }
     }
-    fn get_type_zero(&self) -> NodeRef {
+    fn get_type_zero(&self) -> NodeRef<F,I,U> {
         Self::zero(self.rtype, self.arg_types.clone())
     }
     fn build_random_node<'a>(
         &self,
-        build_table: &'a BuilderTable,
+        build_table: &'a BuilderTable<F,I,U>,
         arg_types: &[TypeV],
         node_rtype: TypeV,
         depth: usize,
-        params: &'a mut BuilderParams,
-    ) -> NodeRef {
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> NodeRef<F,I,U> {
         let mut node = Self::get_type_zero(self);
         let lhs = build_table
             .get_rand_node(depth + 1, node_rtype, params)
@@ -253,7 +254,7 @@ impl Node for Sub {
             })
         }
     }
-    fn deep_copy(&self) -> NodeRef {
+    fn deep_copy(&self) -> NodeRef<F,I,U> {
         Self::make(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
     fn mutant_copy<'a>(
@@ -261,9 +262,9 @@ impl Node for Sub {
         probability: f32,
         node_depth: usize,
         arg_types: &[TypeV],
-        build_table: &'a BuilderTable,
-        params: &'a mut BuilderParams,
-    ) -> Option<NodeRef> {
+        build_table: &'a BuilderTable<F,I,U>,
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> Option<NodeRef<F,I,U>> {
         if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
             Some(self.build_random_node(
                 build_table,
@@ -303,15 +304,15 @@ impl Node for Sub {
     }
 }
 
-pub struct Mul {
+pub struct Mul<F: Float, I: Integer, U: Unsigned> {
     pub rtype: TypeV,
     pub arg_types: Vec<TypeV>,
-    pub rhs: NodeRef,
-    pub lhs: NodeRef,
+    pub rhs: NodeRef<F,I,U>,
+    pub lhs: NodeRef<F,I,U>,
 }
 
-impl Mul {
-    pub fn make(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
+impl<F: Float, I: Integer, U: Unsigned> Mul<F,I,U> {
+    pub fn make(rhs: NodeRef<F,I,U>, lhs: NodeRef<F,I,U>) -> NodeRef<F,I,U> {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), lhs.get_rtype());
         Box::new(Mul {
@@ -321,7 +322,7 @@ impl Mul {
             lhs,
         })
     }
-    pub fn zero(rtype: TypeV, arg_types: Vec<TypeV>) -> NodeRef {
+    pub fn zero(rtype: TypeV, arg_types: Vec<TypeV>) -> NodeRef<F,I,U> {
         Box::new(Mul {
             rtype,
             arg_types,
@@ -331,7 +332,7 @@ impl Mul {
     }
 }
 
-impl Node for Mul {
+impl<F: Float, I: Integer, U: Unsigned> Node<F,I,U> for Mul<F,I,U> {
     fn to_str(&self, indent: usize) -> String {
         " ".repeat(indent)
             + "*\n"
@@ -339,7 +340,7 @@ impl Node for Mul {
             + "\n"
             + &self.rhs.to_str(indent + 1)
     }
-    fn eval(&self, args: &[Type]) -> Type {
+    fn eval(&self, args: &[Type<F,I,U>]) -> Type<F,I,U> {
         let r = self.rhs.eval(args);
         let l = self.lhs.eval(args);
         match (r, l) {
@@ -355,24 +356,24 @@ impl Node for Mul {
     fn get_arg_types(&self) -> &[TypeV] {
         &self.arg_types
     }
-    fn set_child(&mut self, child_index: usize, child: NodeRef) {
+    fn set_child(&mut self, child_index: usize, child: NodeRef<F,I,U>) {
         match child_index {
             0 => self.lhs = child,
             1 => self.rhs = child,
             _ => unreachable!(),
         }
     }
-    fn get_type_zero(&self) -> NodeRef {
+    fn get_type_zero(&self) -> NodeRef<F,I,U> {
         Self::zero(self.rtype, self.arg_types.clone())
     }
     fn build_random_node<'a>(
         &self,
-        build_table: &'a BuilderTable,
+        build_table: &'a BuilderTable<F,I,U>,
         arg_types: &[TypeV],
         node_rtype: TypeV,
         depth: usize,
-        params: &'a mut BuilderParams,
-    ) -> NodeRef {
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> NodeRef<F,I,U> {
         let mut node = Self::get_type_zero(self);
         let lhs = build_table
             .get_rand_node(depth + 1, node_rtype, params)
@@ -403,7 +404,7 @@ impl Node for Mul {
             })
         }
     }
-    fn deep_copy(&self) -> NodeRef {
+    fn deep_copy(&self) -> NodeRef<F,I,U> {
         Self::make(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
     fn mutant_copy<'a>(
@@ -411,9 +412,9 @@ impl Node for Mul {
         probability: f32,
         node_depth: usize,
         arg_types: &[TypeV],
-        build_table: &'a BuilderTable,
-        params: &'a mut BuilderParams,
-    ) -> Option<NodeRef> {
+        build_table: &'a BuilderTable<F,I,U>,
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> Option<NodeRef<F,I,U>> {
         if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
             Some(self.build_random_node(
                 build_table,
@@ -454,15 +455,15 @@ impl Node for Mul {
     }
 }
 
-pub struct Div {
+pub struct Div<F: Float, I: Integer, U: Unsigned> {
     pub rtype: TypeV,
     pub arg_types: Vec<TypeV>,
-    pub rhs: NodeRef,
-    pub lhs: NodeRef,
+    pub rhs: NodeRef<F,I,U>,
+    pub lhs: NodeRef<F,I,U>,
 }
 
-impl Div {
-    pub fn make(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
+impl<F: Float, I: Integer, U: Unsigned> Div<F,I,U> {
+    pub fn make(rhs: NodeRef<F,I,U>, lhs: NodeRef<F,I,U>) -> NodeRef<F,I,U> {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), lhs.get_rtype());
         Box::new(Div {
@@ -472,7 +473,7 @@ impl Div {
             lhs,
         })
     }
-    pub fn zero(rtype: TypeV, arg_types: Vec<TypeV>) -> NodeRef {
+    pub fn zero(rtype: TypeV, arg_types: Vec<TypeV>) -> NodeRef<F,I,U> {
         Box::new(Div {
             rtype,
             arg_types,
@@ -480,12 +481,12 @@ impl Div {
             lhs: Null::zero(rtype),
         })
     }
-    fn get_type_zero(&self) -> NodeRef {
+    fn get_type_zero(&self) -> NodeRef<F,I,U> {
         Self::zero(self.rtype, self.arg_types.clone())
     }
 }
 
-impl Node for Div {
+impl<F: Float, I: Integer, U: Unsigned> Node<F,I,U> for Div<F,I,U> {
     fn to_str(&self, indent: usize) -> String {
         " ".repeat(indent)
             + "/\n"
@@ -493,7 +494,7 @@ impl Node for Div {
             + "\n"
             + &self.rhs.to_str(indent + 1)
     }
-    fn eval(&self, args: &[Type]) -> Type {
+    fn eval(&self, args: &[Type<F,I,U>]) -> Type<F,I,U> {
         let r = self.rhs.eval(args);
         let l = self.lhs.eval(args);
         match (r, l) {
@@ -509,24 +510,24 @@ impl Node for Div {
     fn get_arg_types(&self) -> &[TypeV] {
         &self.arg_types
     }
-    fn set_child(&mut self, child_index: usize, child: NodeRef) {
+    fn set_child(&mut self, child_index: usize, child: NodeRef<F,I,U>) {
         match child_index {
             0 => self.lhs = child,
             1 => self.rhs = child,
             _ => unreachable!(),
         }
     }
-    fn get_type_zero(&self) -> NodeRef {
+    fn get_type_zero(&self) -> NodeRef<F,I,U> {
         Self::zero(self.rtype, self.arg_types.clone())
     }
     fn build_random_node<'a>(
         &self,
-        build_table: &'a BuilderTable,
+        build_table: &'a BuilderTable<F,I,U>,
         arg_types: &[TypeV],
         node_rtype: TypeV,
         depth: usize,
-        params: &'a mut BuilderParams,
-    ) -> NodeRef {
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> NodeRef<F,I,U> {
         let mut node = Self::get_type_zero(self);
         let lhs = build_table
             .get_rand_node(depth + 1, node_rtype, params)
@@ -557,7 +558,7 @@ impl Node for Div {
             })
         }
     }
-    fn deep_copy(&self) -> NodeRef {
+    fn deep_copy(&self) -> NodeRef<F,I,U> {
         Self::make(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
     fn mutant_copy<'a>(
@@ -565,9 +566,9 @@ impl Node for Div {
         probability: f32,
         node_depth: usize,
         arg_types: &[TypeV],
-        build_table: &'a BuilderTable,
-        params: &'a mut BuilderParams,
-    ) -> Option<NodeRef> {
+        build_table: &'a BuilderTable<F,I,U>,
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> Option<NodeRef<F,I,U>> {
         if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
             Some(self.build_random_node(
                 build_table,
@@ -607,15 +608,15 @@ impl Node for Div {
         }
     }
 }
-pub struct Pow {
+pub struct Pow<F: Float, I: Integer, U: Unsigned> {
     pub rtype: TypeV,
     pub arg_types: Vec<TypeV>,
-    pub rhs: NodeRef,
-    pub lhs: NodeRef,
+    pub rhs: NodeRef<F,I,U>,
+    pub lhs: NodeRef<F,I,U>,
 }
 
-impl Pow {
-    pub fn make(rhs: NodeRef, lhs: NodeRef) -> NodeRef {
+impl<F: Float, I: Integer, U: Unsigned> Pow<F,I,U> {
+    pub fn make(rhs: NodeRef<F,I,U>, lhs: NodeRef<F,I,U>) -> NodeRef<F,I,U> {
         let rtype = rhs.get_rtype();
         assert_eq!(rhs.get_rtype(), lhs.get_rtype());
         Box::new(Pow {
@@ -625,7 +626,7 @@ impl Pow {
             lhs,
         })
     }
-    pub fn zero(rtype: TypeV, arg_types: Vec<TypeV>) -> NodeRef {
+    pub fn zero(rtype: TypeV, arg_types: Vec<TypeV>) -> NodeRef<F,I,U> {
         Box::new(Pow {
             rtype,
             arg_types,
@@ -635,7 +636,7 @@ impl Pow {
     }
 }
 
-impl Node for Pow {
+impl<F: Float, I: Integer, U: Unsigned> Node<F,I,U> for Pow<F,I,U> {
     fn to_str(&self, indent: usize) -> String {
         " ".repeat(indent)
             + "**\n"
@@ -643,7 +644,7 @@ impl Node for Pow {
             + "\n"
             + &self.rhs.to_str(indent + 1)
     }
-    fn eval(&self, args: &[Type]) -> Type {
+    fn eval(&self, args: &[Type<F,I,U>]) -> Type<F,I,U> {
         let r = self.rhs.eval(args);
         let l = self.lhs.eval(args);
         match (r, l) {
@@ -662,24 +663,24 @@ impl Node for Pow {
     fn get_arg_types(&self) -> &[TypeV] {
         &self.arg_types
     }
-    fn set_child(&mut self, child_index: usize, child: NodeRef) {
+    fn set_child(&mut self, child_index: usize, child: NodeRef<F,I,U>) {
         match child_index {
             0 => self.lhs = child,
             1 => self.rhs = child,
             _ => unreachable!(),
         }
     }
-    fn get_type_zero(&self) -> NodeRef {
+    fn get_type_zero(&self) -> NodeRef<F,I,U> {
         Self::zero(self.rtype, self.arg_types.clone())
     }
     fn build_random_node<'a>(
         &self,
-        build_table: &'a BuilderTable,
+        build_table: &'a BuilderTable<F,I,U>,
         arg_types: &[TypeV],
         node_rtype: TypeV,
         depth: usize,
-        params: &'a mut BuilderParams,
-    ) -> NodeRef {
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> NodeRef<F,I,U> {
         let mut node = Self::get_type_zero(self);
         let lhs = build_table
             .get_rand_node(depth + 1, node_rtype, params)
@@ -710,7 +711,7 @@ impl Node for Pow {
             })
         }
     }
-    fn deep_copy(&self) -> NodeRef {
+    fn deep_copy(&self) -> NodeRef<F,I,U> {
         Self::make(self.rhs.deep_copy(), self.lhs.deep_copy())
     }
     fn mutant_copy<'a>(
@@ -718,9 +719,9 @@ impl Node for Pow {
         probability: f32,
         node_depth: usize,
         arg_types: &[TypeV],
-        build_table: &'a BuilderTable,
-        params: &'a mut BuilderParams,
-    ) -> Option<NodeRef> {
+        build_table: &'a BuilderTable<F,I,U>,
+        params: &'a mut BuilderParams<F,I,U>,
+    ) -> Option<NodeRef<F,I,U>> {
         if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, node_depth) {
             Some(self.build_random_node(
                 build_table,

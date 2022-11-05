@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 use super::base::*;
 use rand::Rng;
+use num::{Integer, Unsigned, Float};
 
 pub struct And {
     pub rtype: TypeV,

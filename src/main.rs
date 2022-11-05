@@ -1,11 +1,11 @@
-mod algorithm;
+//mod algorithm;
 mod node;
 
-use algorithm::population as ap;
+//use algorithm::population as ap;
 use node::base as nb;
 use node::btables::FloatFnTable;
 
-fn main() {
+fn main() {/* 
     let table = FloatFnTable::new().table;
     let params = nb::BuilderParams::new().max_depth(6);
     let mut popln = ap::Population::new(vec![nb::TypeV::Float, nb::TypeV::Float], nb::TypeV::Float);
@@ -37,5 +37,5 @@ fn main() {
             p.to_str(),
             p.error
         );
-    }
+    }*/
 }
