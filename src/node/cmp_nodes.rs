@@ -157,6 +157,64 @@ impl Node for Eq {
             }
         }
     }
+    fn get_random_child(
+        &self,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth) {
+            Some(self.deep_copy())
+        } else {
+            let maybe_rhs = self.rhs.get_random_child(probability, depth + 1, params);
+            let maybe_lhs = self.lhs.get_random_child(probability, depth + 1, params);
+
+            match (maybe_lhs, maybe_rhs) {
+                (maybe_lhs, None) => maybe_lhs,
+                (None, maybe_rhs) => maybe_rhs,
+                (mlhs, mrhs) => {
+                    if params.randomizer.gen::<f32>() < 0.5 {
+                        mlhs
+                    } else {
+                        mrhs
+                    }
+                }
+            }
+        }
+    }
+
+    fn set_random_child(
+        &self,
+        new_node: NodeRef,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if new_node.get_rtype() == self.get_rtype()
+            && params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth)
+        {
+            if new_node.get_rtype() == self.get_rtype() {
+                Some(new_node)
+            } else {
+                None
+            }
+        } else {
+            #[allow(clippy::collapsible_else_if)]
+            if params.randomizer.gen::<f32>() < 0.5 {
+                let lhs = self
+                    .lhs
+                    .set_random_child(new_node, probability, depth + 1, params)?;
+                let rhs = self.rhs.deep_copy();
+                Some(Self::make(rhs, lhs))
+            } else {
+                let rhs = self
+                    .rhs
+                    .set_random_child(new_node, probability, depth + 1, params)?;
+                let lhs = self.lhs.deep_copy();
+                Some(Self::make(rhs, lhs))
+            }
+        }
+    }
 }
 
 pub struct NEq {
@@ -312,6 +370,64 @@ impl Node for NEq {
                     ret.set_child(1, rhs_s);
                     Some(ret)
                 }
+            }
+        }
+    }
+    fn get_random_child(
+        &self,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth) {
+            Some(self.deep_copy())
+        } else {
+            let maybe_rhs = self.rhs.get_random_child(probability, depth + 1, params);
+            let maybe_lhs = self.lhs.get_random_child(probability, depth + 1, params);
+
+            match (maybe_lhs, maybe_rhs) {
+                (maybe_lhs, None) => maybe_lhs,
+                (None, maybe_rhs) => maybe_rhs,
+                (mlhs, mrhs) => {
+                    if params.randomizer.gen::<f32>() < 0.5 {
+                        mlhs
+                    } else {
+                        mrhs
+                    }
+                }
+            }
+        }
+    }
+
+    fn set_random_child(
+        &self,
+        new_node: NodeRef,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if new_node.get_rtype() == self.get_rtype()
+            && params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth)
+        {
+            if new_node.get_rtype() == self.get_rtype() {
+                Some(new_node)
+            } else {
+                None
+            }
+        } else {
+            #[allow(clippy::collapsible_else_if)]
+            if params.randomizer.gen::<f32>() < 0.5 {
+                let lhs = self
+                    .lhs
+                    .set_random_child(new_node, probability, depth + 1, params)?;
+                let rhs = self.rhs.deep_copy();
+                Some(Self::make(rhs, lhs))
+            } else {
+                let rhs = self
+                    .rhs
+                    .set_random_child(new_node, probability, depth + 1, params)?;
+                let lhs = self.lhs.deep_copy();
+                Some(Self::make(rhs, lhs))
             }
         }
     }
@@ -472,6 +588,64 @@ impl Node for Gt {
             }
         }
     }
+    fn get_random_child(
+        &self,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth) {
+            Some(self.deep_copy())
+        } else {
+            let maybe_rhs = self.rhs.get_random_child(probability, depth + 1, params);
+            let maybe_lhs = self.lhs.get_random_child(probability, depth + 1, params);
+
+            match (maybe_lhs, maybe_rhs) {
+                (maybe_lhs, None) => maybe_lhs,
+                (None, maybe_rhs) => maybe_rhs,
+                (mlhs, mrhs) => {
+                    if params.randomizer.gen::<f32>() < 0.5 {
+                        mlhs
+                    } else {
+                        mrhs
+                    }
+                }
+            }
+        }
+    }
+
+    fn set_random_child(
+        &self,
+        new_node: NodeRef,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if new_node.get_rtype() == self.get_rtype()
+            && params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth)
+        {
+            if new_node.get_rtype() == self.get_rtype() {
+                Some(new_node)
+            } else {
+                None
+            }
+        } else {
+            #[allow(clippy::collapsible_else_if)]
+            if params.randomizer.gen::<f32>() < 0.5 {
+                let lhs = self
+                    .lhs
+                    .set_random_child(new_node, probability, depth + 1, params)?;
+                let rhs = self.rhs.deep_copy();
+                Some(Self::make(rhs, lhs))
+            } else {
+                let rhs = self
+                    .rhs
+                    .set_random_child(new_node, probability, depth + 1, params)?;
+                let lhs = self.lhs.deep_copy();
+                Some(Self::make(rhs, lhs))
+            }
+        }
+    }
 }
 
 pub struct Gte {
@@ -626,6 +800,64 @@ impl Node for Gte {
                     ret.set_child(1, rhs_s);
                     Some(ret)
                 }
+            }
+        }
+    }
+    fn get_random_child(
+        &self,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth) {
+            Some(self.deep_copy())
+        } else {
+            let maybe_rhs = self.rhs.get_random_child(probability, depth + 1, params);
+            let maybe_lhs = self.lhs.get_random_child(probability, depth + 1, params);
+
+            match (maybe_lhs, maybe_rhs) {
+                (maybe_lhs, None) => maybe_lhs,
+                (None, maybe_rhs) => maybe_rhs,
+                (mlhs, mrhs) => {
+                    if params.randomizer.gen::<f32>() < 0.5 {
+                        mlhs
+                    } else {
+                        mrhs
+                    }
+                }
+            }
+        }
+    }
+
+    fn set_random_child(
+        &self,
+        new_node: NodeRef,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if new_node.get_rtype() == self.get_rtype()
+            && params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth)
+        {
+            if new_node.get_rtype() == self.get_rtype() {
+                Some(new_node)
+            } else {
+                None
+            }
+        } else {
+            #[allow(clippy::collapsible_else_if)]
+            if params.randomizer.gen::<f32>() < 0.5 {
+                let lhs = self
+                    .lhs
+                    .set_random_child(new_node, probability, depth + 1, params)?;
+                let rhs = self.rhs.deep_copy();
+                Some(Self::make(rhs, lhs))
+            } else {
+                let rhs = self
+                    .rhs
+                    .set_random_child(new_node, probability, depth + 1, params)?;
+                let lhs = self.lhs.deep_copy();
+                Some(Self::make(rhs, lhs))
             }
         }
     }
@@ -786,6 +1018,64 @@ impl Node for Lt {
             }
         }
     }
+    fn get_random_child(
+        &self,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth) {
+            Some(self.deep_copy())
+        } else {
+            let maybe_rhs = self.rhs.get_random_child(probability, depth + 1, params);
+            let maybe_lhs = self.lhs.get_random_child(probability, depth + 1, params);
+
+            match (maybe_lhs, maybe_rhs) {
+                (maybe_lhs, None) => maybe_lhs,
+                (None, maybe_rhs) => maybe_rhs,
+                (mlhs, mrhs) => {
+                    if params.randomizer.gen::<f32>() < 0.5 {
+                        mlhs
+                    } else {
+                        mrhs
+                    }
+                }
+            }
+        }
+    }
+
+    fn set_random_child(
+        &self,
+        new_node: NodeRef,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if new_node.get_rtype() == self.get_rtype()
+            && params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth)
+        {
+            if new_node.get_rtype() == self.get_rtype() {
+                Some(new_node)
+            } else {
+                None
+            }
+        } else {
+            #[allow(clippy::collapsible_else_if)]
+            if params.randomizer.gen::<f32>() < 0.5 {
+                let lhs = self
+                    .lhs
+                    .set_random_child(new_node, probability, depth + 1, params)?;
+                let rhs = self.rhs.deep_copy();
+                Some(Self::make(rhs, lhs))
+            } else {
+                let rhs = self
+                    .rhs
+                    .set_random_child(new_node, probability, depth + 1, params)?;
+                let lhs = self.lhs.deep_copy();
+                Some(Self::make(rhs, lhs))
+            }
+        }
+    }
 }
 
 pub struct Lte {
@@ -940,6 +1230,64 @@ impl Node for Lte {
                     ret.set_child(1, rhs_s);
                     Some(ret)
                 }
+            }
+        }
+    }
+    fn get_random_child(
+        &self,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth) {
+            Some(self.deep_copy())
+        } else {
+            let maybe_rhs = self.rhs.get_random_child(probability, depth + 1, params);
+            let maybe_lhs = self.lhs.get_random_child(probability, depth + 1, params);
+
+            match (maybe_lhs, maybe_rhs) {
+                (maybe_lhs, None) => maybe_lhs,
+                (None, maybe_rhs) => maybe_rhs,
+                (mlhs, mrhs) => {
+                    if params.randomizer.gen::<f32>() < 0.5 {
+                        mlhs
+                    } else {
+                        mrhs
+                    }
+                }
+            }
+        }
+    }
+
+    fn set_random_child(
+        &self,
+        new_node: NodeRef,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if new_node.get_rtype() == self.get_rtype()
+            && params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth)
+        {
+            if new_node.get_rtype() == self.get_rtype() {
+                Some(new_node)
+            } else {
+                None
+            }
+        } else {
+            #[allow(clippy::collapsible_else_if)]
+            if params.randomizer.gen::<f32>() < 0.5 {
+                let lhs = self
+                    .lhs
+                    .set_random_child(new_node, probability, depth + 1, params)?;
+                let rhs = self.rhs.deep_copy();
+                Some(Self::make(rhs, lhs))
+            } else {
+                let rhs = self
+                    .rhs
+                    .set_random_child(new_node, probability, depth + 1, params)?;
+                let lhs = self.lhs.deep_copy();
+                Some(Self::make(rhs, lhs))
             }
         }
     }

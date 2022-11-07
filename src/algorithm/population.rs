@@ -76,4 +76,32 @@ impl Population {
     pub fn sort_population(&mut self) {
         self.p.sort_by(|a, b| a.error.cmp(&b.error));
     }
+
+    ///Only keep the top expressions with least errors
+    /// Keep final_n number of children only
+    #[allow(dead_code)]
+    pub fn purge_unfit(&mut self, final_n: usize) {
+        let l = self.p.len();
+        for _ in 0..(l - final_n) {
+            self.p.pop();
+        }
+    }
+
+    ///This is the actual train method
+    /// returns the expression tree with least error
+    pub fn train(&mut self, train_x: &[Vec<nb::Type>], train_y: &[nb::Type]) -> et::Expr {
+        self.init_population(50); //Start with few kids in the beginning
+        for i in 0..=200 {
+            //1000 iterations
+            self.calc_err(train_x, train_y); //calculate the errors expression tree
+            self.sort_population(); //sort the population by error
+            let l = self.p.len();
+            self.purge_unfit(50);
+            if i!=200 {
+                self.generate_mutants(l, 0.1);
+            }
+            println!("iteration {i}");
+        }
+        self.p[0].clone()
+    }
 }

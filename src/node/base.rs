@@ -121,6 +121,29 @@ pub trait Node {
         params: &'a mut BuilderParams,
     ) -> Option<NodeRef>;
     fn type_check(&self) -> Result<(), TypeErr>;
+    //these two methods are required for "conjugation" of two trees
+    //to form a brand new child tree
+
+    /// return a random child node from the tree
+    /// probability increases as you go down recursively
+    /// this can be null, as you might not get a child at all
+    fn get_random_child(
+        &self,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef>;
+    /// takes a node and randomly selects a child node and replaces it with
+    /// child node.
+    /// probability increases as you go down recursively
+    /// in case no node was selected, it will return null
+    fn set_random_child(
+        &self,
+        new_node: NodeRef,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef>;
 }
 
 /// Special FnNode trait for function node
@@ -192,6 +215,25 @@ impl Node for Null {
         _arg_types: &[TypeV],
         _build_table: &'a BuilderTable,
         _params: &'a mut BuilderParams,
+    ) -> Option<NodeRef> {
+        None
+    }
+
+    fn get_random_child(
+        &self,
+        _probability: f32,
+        _depth: usize,
+        _params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        None
+    }
+
+    fn set_random_child(
+        &self,
+        _new_node: NodeRef,
+        _probability: f32,
+        _depth: usize,
+        _params: &'_ mut BuilderParams,
     ) -> Option<NodeRef> {
         None
     }
@@ -293,6 +335,33 @@ impl Node for Val {
             None
         }
     }
+
+    fn get_random_child(
+        &self,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth) {
+            Some(self.deep_copy())
+        } else {
+            None
+        }
+    }
+
+    fn set_random_child(
+        &self,
+        new_node: NodeRef,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth) {
+            Some(new_node)
+        } else {
+            None
+        }
+    }
 }
 
 pub struct Var {
@@ -368,6 +437,32 @@ impl Node for Var {
             } else {
                 Some(Self::make(vindex, self.rtype))
             }
+        } else {
+            None
+        }
+    }
+    fn get_random_child(
+        &self,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth) {
+            Some(self.deep_copy())
+        } else {
+            None
+        }
+    }
+
+    fn set_random_child(
+        &self,
+        new_node: NodeRef,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth) {
+            Some(new_node)
         } else {
             None
         }

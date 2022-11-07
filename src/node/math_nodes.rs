@@ -9,6 +9,12 @@ macro_rules! single_arg_fn_node_def {
         }
 
         impl $type_name {
+            pub fn make(child: NodeRef) -> NodeRef {
+                Box::new($type_name {
+                    arg: child,
+                    arg_types: vec![TypeV::Float],
+                })
+            }
             pub fn zero() -> NodeRef {
                 Box::new($type_name {
                     arg: Null::zero(TypeV::Float),
@@ -89,9 +95,7 @@ macro_rules! single_arg_fn_node_def {
                         build_table,
                         params,
                     )?; //if child node's mutation was unsuccesful, then this node's mutation was unsuccesful as a whole
-                    let mut ret = Self::zero();
-                    ret.set_child(0, arg);
-                    return Some(ret);
+                    Some(Self::make(arg))
                 }
             }
             fn type_check(&self) -> Result<(), TypeErr> {
@@ -106,6 +110,37 @@ macro_rules! single_arg_fn_node_def {
                             self.arg.get_rtype()
                         ),
                     });
+                }
+            }
+            fn get_random_child<'a>(
+                &self,
+                probability: f32,
+                depth: usize,
+                params: &'a mut BuilderParams,
+            ) -> Option<NodeRef> {
+                if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth) {
+                    Some(self.deep_copy())
+                } else {
+                    self.arg.get_random_child(probability, depth + 1, params)
+                }
+            }
+
+            fn set_random_child<'a>(
+                &self,
+                new_node: NodeRef,
+                probability: f32,
+                depth: usize,
+                params: &'a mut BuilderParams,
+            ) -> Option<NodeRef> {
+                if new_node.get_rtype() == self.get_rtype()
+                    && params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth)
+                {
+                    Some(new_node)
+                } else {
+                    let child =
+                        self.arg
+                            .set_random_child(new_node, probability, depth + 1, params)?;
+                    Some(Self::make(child))
                 }
             }
         }

@@ -1,5 +1,7 @@
 use super::base::*;
+use rand::seq::SliceRandom;
 use rand::Rng;
+
 pub struct Cond {
     pub rtype: TypeV,
     pub arg_types: Vec<TypeV>,
@@ -172,5 +174,64 @@ impl Node for Cond {
             self.iftrue.deep_copy(),
             self.iffalse.deep_copy(),
         )
+    }
+    fn get_random_child(
+        &self,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth) {
+            Some(self.deep_copy())
+        } else {
+            let maybe_cond = self.cond.get_random_child(probability, depth + 1, params);
+            let maybe_iftrue = self.iftrue.get_random_child(probability, depth + 1, params);
+            let maybe_iffalse = self
+                .iffalse
+                .get_random_child(probability, depth + 1, params);
+
+            match (maybe_cond, maybe_iftrue, maybe_iffalse) {
+                (None, None, None) => None,
+                (maybe_cond, maybe_iftrue, maybe_iffalse) => {
+                    let valid_child: Vec<i32> = vec![
+                        maybe_cond.is_some().into(),
+                        maybe_iftrue.is_some().into(),
+                        maybe_iffalse.is_some().into(),
+                    ];
+                    let idx = valid_child
+                        .choose_weighted(&mut params.randomizer, |x| *x)
+                        .expect("Random selection failed");
+                    if *idx == 0 {
+                        maybe_cond
+                    } else if *idx == 1 {
+                        maybe_iftrue
+                    } else if *idx == 2 {
+                        maybe_iffalse
+                    } else {
+                        unreachable!()
+                    }
+                }
+            }
+        }
+    }
+
+    fn set_random_child(
+        &self,
+        new_node: NodeRef,
+        probability: f32,
+        depth: usize,
+        params: &'_ mut BuilderParams,
+    ) -> Option<NodeRef> {
+        if new_node.get_rtype() == self.get_rtype()
+            && params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth)
+        {
+            if new_node.get_rtype() == self.get_rtype() {
+                Some(new_node)
+            } else {
+                None
+            }
+        } else {
+            unimplemented!()
+        }
     }
 }
