@@ -589,6 +589,10 @@ impl BuilderParams {
     }
     pub fn get_mut_prob(&self, base_prob: f32, depth: usize) -> f32 {
         let s = (usize::pow(2, depth as u32) as f32) * base_prob;
-        1.0 / (1.0 + f32::exp(-5.5 * (s - 0.7))) //FIXME: Maybe this is not a good function for probability growth
+        if depth >= self.max_depth {
+            0.0
+        } else {
+            1.0 / (1.0 + f32::exp(-5.5 * (s - 0.7)))
+        } //FIXME: Maybe this is not a good function for probability growth
     }
 }

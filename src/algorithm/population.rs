@@ -1,5 +1,6 @@
 use super::super::node::base as nb;
 use super::expr_tree as et;
+use rand::Rng;
 
 #[allow(dead_code)]
 pub struct Population {
@@ -47,9 +48,9 @@ impl Population {
     }
 
     #[allow(dead_code)]
-    pub fn generate_mutants(&mut self, num_subs: usize, mut_prob: f32) {
+    pub fn generate_mutants(&mut self, num_tries: usize, mut_prob: f32) {
         let initial_population = self.p.len();
-        for i in 0..num_subs {
+        for i in 0..num_tries {
             let p = &self.p[i % initial_population];
             let maybe_mutant = p.root.mutant_copy(
                 mut_prob,
@@ -60,6 +61,22 @@ impl Population {
             );
             if let Some(s) = maybe_mutant {
                 self.p.push(et::Expr::new(s));
+            }
+        }
+    }
+
+    pub fn cross_breed(&mut self, num_tries: usize, breeding_prob: f32) {
+        for _ in 0..num_tries {
+            let maybe_father_gene = self.p[self.params.randomizer.gen_range(0..num_tries)]
+                .root
+                .get_random_child(breeding_prob, 0, &mut self.params);
+            if let Some(father_gene) = maybe_father_gene {
+                let maybe_child = self.p[self.params.randomizer.gen_range(0..num_tries)]
+                    .root
+                    .set_random_child(father_gene, breeding_prob, 0, &mut self.params);
+                if let Some(child) = maybe_child {
+                    self.p.push(et::Expr::new(child));
+                }
             }
         }
     }
@@ -89,18 +106,22 @@ impl Population {
 
     ///This is the actual train method
     /// returns the expression tree with least error
-    pub fn train(&mut self, train_x: &[Vec<nb::Type>], train_y: &[nb::Type]) -> et::Expr {
-        self.init_population(50); //Start with few kids in the beginning
-        for i in 0..=200 {
-            //1000 iterations
+    pub fn train(&mut self, train_x: &[Vec<nb::Type>], train_y: &[nb::Type], n_iter: usize) -> et::Expr {
+        let num_subs: usize = 128;
+        self.init_population(num_subs); //Start with few kids in the beginning
+        for i in 0..n_iter {
             self.calc_err(train_x, train_y); //calculate the errors expression tree
             self.sort_population(); //sort the population by error
-            let l = self.p.len();
-            self.purge_unfit(50);
-            if i!=200 {
+            self.purge_unfit(num_subs);
+            let l = self.p.len() / 2;
+            if i != n_iter-1 {
+                self.cross_breed(l, 0.1);
                 self.generate_mutants(l, 0.1);
             }
-            println!("iteration {i}");
+            if i%(n_iter/5)==0 {
+                self.init_population(num_subs/2)
+            }
+            println!("iter {i}");
         }
         self.p[0].clone()
     }
