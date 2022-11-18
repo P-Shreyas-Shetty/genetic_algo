@@ -20,7 +20,7 @@ fn main() {
                 params0.randomizer.gen_range(-10.0f32..=10.0f32),
             );
             train_x.push(vec![nb::Type::float(x), nb::Type::float(y)]);
-            train_y.push(nb::Type::float(x*x + y*y - x*y));
+            train_y.push(nb::Type::float(x + y + x - y));
         }
         (train_x, train_y)
     };
@@ -36,7 +36,7 @@ fn main() {
             p.to_str(),
             p.error
         );
-        if i > 10{
+        if i > 10 {
             break;
         }
     }
@@ -44,5 +44,4 @@ fn main() {
             "################### TOP_KID #####################\n{}\n{:#?}========================================",
             top_kid.to_str(), top_kid.error
         );
-    
 }

@@ -106,7 +106,12 @@ impl Population {
 
     ///This is the actual train method
     /// returns the expression tree with least error
-    pub fn train(&mut self, train_x: &[Vec<nb::Type>], train_y: &[nb::Type], n_iter: usize) -> et::Expr {
+    pub fn train(
+        &mut self,
+        train_x: &[Vec<nb::Type>],
+        train_y: &[nb::Type],
+        n_iter: usize,
+    ) -> et::Expr {
         let num_subs: usize = 128;
         self.init_population(num_subs); //Start with few kids in the beginning
         for i in 0..n_iter {
@@ -114,12 +119,12 @@ impl Population {
             self.sort_population(); //sort the population by error
             self.purge_unfit(num_subs);
             let l = self.p.len() / 2;
-            if i != n_iter-1 {
+            if i != n_iter - 1 {
                 self.cross_breed(l, 0.1);
                 self.generate_mutants(l, 0.1);
             }
-            if i%(n_iter/5)==0 {
-                self.init_population(num_subs/2)
+            if i % (n_iter / 5) == 0 {
+                self.init_population(num_subs / 2)
             }
             println!("iter {i}");
         }

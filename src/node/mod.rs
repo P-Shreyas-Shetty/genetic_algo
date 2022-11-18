@@ -1,4 +1,5 @@
 pub mod base;
+mod binary_node_base;
 pub mod btables;
 pub mod cmp_nodes;
 pub mod logic_nodes;
