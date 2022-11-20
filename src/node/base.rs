@@ -146,13 +146,7 @@ pub trait Node {
     ) -> Option<NodeRef>;
 }
 
-/// Special FnNode trait for function node
-/// They will define fn_eval function, which'll be used
-/// instead of having function member or other mechanisms
-pub trait FnNode: Node {
-    //fn get_arg_types(&self) -> Vec<TypeV>;
-    fn set_args(&mut self, args: Vec<NodeRef>);
-}
+
 
 /// A NUll node. This node does nothing
 /// used only for setting "zero" node

@@ -1,19 +1,8 @@
+///This module defines basic arithmatic operators
+
 use super::base::*;
 use super::binary_node_base as bb;
 
-/*
-crate::impl_binary_operation_node!(
-    name => Add,
-    str_ident => "+",
-    expression => (lhs, rhs)-> {
-        match (rhs, lhs) {
-            (Type::Int(ri), Type::Int(li)) => Type::Int(ri + li),
-            (Type::Float(ri), Type::Float(li)) => Type::Float(ri + li),
-            (Type::UInt(ri), Type::UInt(li)) => Type::UInt(ri + li),
-            _ => panic!("Invalid: Can't add {:?} with {:?}", lhs, rhs),
-        }
-});
-*/
 
 pub struct AddEval;
 

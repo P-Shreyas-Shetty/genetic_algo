@@ -16,11 +16,11 @@ fn main() {
         let mut train_y = Vec::<nb::Type>::new();
         for _ in 0..100 {
             let (x, y) = (
-                params0.randomizer.gen_range(-10.0f32..=10.0f32),
-                params0.randomizer.gen_range(-10.0f32..=10.0f32),
+                params0.randomizer.gen_range(1.0f32..=10.0f32),
+                params0.randomizer.gen_range(1.0f32..=10.0f32),
             );
             train_x.push(vec![nb::Type::float(x), nb::Type::float(y)]);
-            train_y.push(nb::Type::float(x + y + x - y));
+            train_y.push(nb::Type::float(x*y+x*(x+y)));
         }
         (train_x, train_y)
     };
