@@ -20,14 +20,14 @@ fn main() {
                 params0.randomizer.gen_range(1.0f32..=10.0f32),
             );
             train_x.push(vec![nb::Type::float(x), nb::Type::float(y)]);
-            train_y.push(nb::Type::float(x*y+x*(x+y)));
+            train_y.push(nb::Type::float(x * y + x * (x + y)));
         }
         (train_x, train_y)
     };
 
     popln.set_build_table(table);
     popln.set_params(params);
-    let mut top_kid = popln.train(&train_x, &train_y, 1800);
+    let mut top_kid = popln.train(&train_x, &train_y, 500);
     top_kid.calc_err(&train_x, &train_y);
 
     for (i, p) in popln.p.iter().enumerate() {
@@ -44,4 +44,5 @@ fn main() {
             "################### TOP_KID #####################\n{}\n{:#?}========================================",
             top_kid.to_str(), top_kid.error
         );
+    
 }

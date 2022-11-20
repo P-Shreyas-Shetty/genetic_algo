@@ -120,4 +120,8 @@ impl Expr {
             nan: err_nan / train_y.len() as f32,
         }
     }
+
+    pub fn prune(&mut self) {
+        self.root = self.root.prune();
+    }
 }

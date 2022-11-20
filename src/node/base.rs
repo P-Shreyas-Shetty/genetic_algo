@@ -102,6 +102,8 @@ pub trait Node {
     fn get_rtype(&self) -> TypeV;
     fn get_arg_types(&self) -> &[TypeV];
     fn set_child(&mut self, child_index: usize, child: NodeRef);
+
+    fn get_child(&self, child_index: usize)->&NodeRef;
     fn get_type_zero(&self) -> NodeRef;
     fn build_random_node<'a>(
         &self,
@@ -144,6 +146,13 @@ pub trait Node {
         depth: usize,
         params: &'_ mut BuilderParams,
     ) -> Option<NodeRef>;
+
+    /// These is to remove wasteful nodes from the tree
+    /// By wasteful I mean stuff like Abs(Abs(...)) === Abs(...)
+    /// or Sin(Asin(x)) == x and so on
+    fn prune(&self)->NodeRef;
+
+    fn get_name(&self)->&'static str;
 }
 
 
@@ -231,6 +240,18 @@ impl Node for Null {
     ) -> Option<NodeRef> {
         None
     }
+
+    fn prune(&self)->NodeRef {
+        unreachable!()
+    }
+
+    fn get_name(&self)->&'static str {
+        "NULL"
+    }
+
+    fn get_child(&self, _child_index: usize)->&NodeRef {
+        unreachable!()
+    }
 }
 
 /// Val node for storing constant values
@@ -287,6 +308,9 @@ impl Node for Val {
     }
     fn set_child(&mut self, _child_index: usize, _child: NodeRef) {
         panic!("Cannot set child node for Val node!!");
+    }
+    fn get_child(&self, _child_index: usize)->&NodeRef {
+        unreachable!()
     }
     fn get_type_zero(&self) -> NodeRef {
         Self::zero(self.rtype)
@@ -356,6 +380,15 @@ impl Node for Val {
             None
         }
     }
+
+
+    fn prune(&self)->NodeRef {
+        self.deep_copy()
+    }
+
+    fn get_name(&self)->&'static str {
+        "Val"
+    }
 }
 
 pub struct Var {
@@ -389,6 +422,9 @@ impl Node for Var {
     }
     fn set_child(&mut self, _child_index: usize, _child: NodeRef) {
         panic!("Cannot set child node for Var node!!");
+    }
+    fn get_child(&self, _child_index: usize)->&NodeRef {
+        unreachable!()
     }
     fn get_type_zero(&self) -> NodeRef {
         Self::make(0, self.rtype)
@@ -460,6 +496,13 @@ impl Node for Var {
         } else {
             None
         }
+    }
+    
+    fn prune(&self)->NodeRef {
+        self.deep_copy()
+    }
+    fn get_name(&self)->&'static str {
+        "Var"
     }
 }
 

@@ -81,6 +81,12 @@ impl Population {
         }
     }
 
+    pub fn prune_population(&mut self) {
+        for p in self.p.iter_mut() {
+            p.prune()
+        }
+    }
+
     #[allow(dead_code)]
     pub fn calc_err(&mut self, train_x: &[Vec<nb::Type>], train_y: &[nb::Type]) {
         for p in self.p.iter_mut() {
@@ -115,6 +121,7 @@ impl Population {
         let num_subs: usize = 128;
         self.init_population(num_subs); //Start with few kids in the beginning
         for i in 0..n_iter {
+            self.prune_population();
             self.calc_err(train_x, train_y); //calculate the errors expression tree
             self.sort_population(); //sort the population by error
             self.purge_unfit(num_subs);

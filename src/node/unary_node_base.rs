@@ -62,6 +62,12 @@ impl<T: 'static + UnaryOpKind> Node for UnaryOpBase<T> {
             _ => unreachable!(),
         }
     }
+    fn get_child(&self, child_index: usize) -> &NodeRef {
+        match child_index {
+            0 => &self.arg,
+            _ => unreachable!(),
+        }
+    }
     fn get_type_zero(&self) -> NodeRef {
         Self::zero()
     }
@@ -155,6 +161,33 @@ impl<T: 'static + UnaryOpKind> Node for UnaryOpBase<T> {
                 .arg
                 .set_random_child(new_node, probability, depth + 1, params)?;
             Some(Self::make(child))
+        }
+    }
+
+    fn get_name(&self) -> &'static str {
+        T::NAME
+    }
+
+    /// This is probably an unsatisfactory way to do it, I'll do better when I find a way
+    /// to put this in main class
+    fn prune(&self) -> NodeRef {
+        match (T::NAME, self.arg.get_name()) {
+            ("Sin", "ASin")
+            | ("ASin", "Sin")
+            | ("Cos", "ACos")
+            | ("ACos", "Cos")
+            | ("Tan", "ATan")
+            | ("ATan", "Tan")
+            | ("Sinh", "ASinh")
+            | ("ASinh", "Sinh")
+            | ("Cosh", "ACosh")
+            | ("ACosh", "Cosh")
+            | ("Tanh", "ATanh")
+            | ("ATanh", "Tanh")
+            | ("Log", "Exp")
+            | ("Exp", "Log") => self.arg.get_child(0).prune(),
+            ("Abs", "Abs") => self.arg.prune(),
+            _ => Self::make(self.arg.prune()),
         }
     }
 }

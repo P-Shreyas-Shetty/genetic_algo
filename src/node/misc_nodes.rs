@@ -67,6 +67,15 @@ impl Node for Cond {
             _ => unreachable!(),
         }
     }
+
+    fn get_child(&self, child_index: usize) -> &NodeRef {
+        match child_index {
+            0 => &self.cond,
+            1 => &self.iftrue,
+            2 => &self.iffalse,
+            _ => unreachable!(),
+        }
+    }
     fn get_type_zero(&self) -> NodeRef {
         Self::zero(self.rtype, self.arg_types.clone())
     }
@@ -233,5 +242,13 @@ impl Node for Cond {
         } else {
             unimplemented!()
         }
+    }
+
+    fn get_name(&self) -> &'static str {
+        "Cond"
+    }
+
+    fn prune(&self) -> NodeRef {
+        Self::make(self.cond.prune(), self.iftrue.prune(), self.iffalse.prune())
     }
 }

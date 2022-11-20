@@ -224,7 +224,6 @@ macro_rules! impl_binary_operation_node {
     };
 }
 
-
 /// This trait is used to better reuse for binary operations
 pub trait BinOpKind {
     /// This is the string representation of the operator
@@ -292,6 +291,14 @@ impl<T: 'static + BinOpKind> Node for BinOpBase<T> {
         match child_index {
             0 => self.lhs = child,
             1 => self.rhs = child,
+            _ => unreachable!(),
+        }
+    }
+
+    fn get_child(&self, child_index: usize) -> &NodeRef {
+        match child_index {
+            0 => &self.lhs,
+            1 => &self.rhs,
             _ => unreachable!(),
         }
     }
@@ -443,5 +450,18 @@ impl<T: 'static + BinOpKind> Node for BinOpBase<T> {
                 Some(Self::make(rhs, lhs))
             }
         }
+    }
+
+    fn prune(&self)->NodeRef {
+        //This does nothing because even in case where there are wasteful slots in
+        //binary nodes, those will require more complex analysis with specific cases
+        Self::make(
+            self.rhs.prune(),
+            self.lhs.prune()
+        )
+    }
+
+    fn get_name(&self) -> &'static str {
+        T::NAME
     }
 }
