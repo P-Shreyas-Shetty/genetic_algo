@@ -426,7 +426,9 @@ impl<T: 'static + BinOpKind> Node for BinOpBase<T> {
         depth: usize,
         params: &'_ mut BuilderParams,
     ) -> Option<NodeRef> {
-        if new_node.get_rtype() == self.get_rtype()
+        if depth + new_node.get_max_depth() > params.max_depth {
+            None
+        } else if new_node.get_rtype() == self.get_rtype()
             && params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth)
         {
             if new_node.get_rtype() == self.get_rtype() {
@@ -452,16 +454,17 @@ impl<T: 'static + BinOpKind> Node for BinOpBase<T> {
         }
     }
 
-    fn prune(&self)->NodeRef {
+    fn prune(&self) -> NodeRef {
         //This does nothing because even in case where there are wasteful slots in
         //binary nodes, those will require more complex analysis with specific cases
-        Self::make(
-            self.rhs.prune(),
-            self.lhs.prune()
-        )
+        Self::make(self.rhs.prune(), self.lhs.prune())
     }
 
     fn get_name(&self) -> &'static str {
         T::NAME
+    }
+
+    fn get_max_depth(&self) -> usize {
+        usize::max(self.lhs.get_max_depth(), self.rhs.get_max_depth()) + 1
     }
 }

@@ -1,10 +1,7 @@
 ///This module defines all the comparison functions
 /// all nodes assumes arguments are of same kind
-
 use super::base::*;
 use super::binary_node_base as bb;
-
-
 
 pub struct EqEval;
 
@@ -78,7 +75,6 @@ impl bb::BinOpKind for GteEval {
 
 #[allow(dead_code)]
 pub type Gte = bb::BinOpBase<GteEval>;
-
 
 pub struct LtEval;
 

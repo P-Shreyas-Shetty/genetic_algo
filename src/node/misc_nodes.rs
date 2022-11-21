@@ -251,4 +251,12 @@ impl Node for Cond {
     fn prune(&self) -> NodeRef {
         Self::make(self.cond.prune(), self.iftrue.prune(), self.iffalse.prune())
     }
+
+    fn get_max_depth(&self) -> usize {
+        let cond_depth = self.cond.get_max_depth();
+        let iftrue_depth = self.iftrue.get_max_depth();
+        let iffalse_depth = self.iffalse.get_max_depth();
+        let branch_max_depth = usize::max(iffalse_depth, iftrue_depth);
+        usize::max(cond_depth, branch_max_depth) + 1
+    }
 }

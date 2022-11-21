@@ -103,7 +103,7 @@ pub trait Node {
     fn get_arg_types(&self) -> &[TypeV];
     fn set_child(&mut self, child_index: usize, child: NodeRef);
 
-    fn get_child(&self, child_index: usize)->&NodeRef;
+    fn get_child(&self, child_index: usize) -> &NodeRef;
     fn get_type_zero(&self) -> NodeRef;
     fn build_random_node<'a>(
         &self,
@@ -150,12 +150,12 @@ pub trait Node {
     /// These is to remove wasteful nodes from the tree
     /// By wasteful I mean stuff like Abs(Abs(...)) === Abs(...)
     /// or Sin(Asin(x)) == x and so on
-    fn prune(&self)->NodeRef;
+    fn prune(&self) -> NodeRef;
 
-    fn get_name(&self)->&'static str;
+    fn get_name(&self) -> &'static str;
+
+    fn get_max_depth(&self) -> usize;
 }
-
-
 
 /// A NUll node. This node does nothing
 /// used only for setting "zero" node
@@ -241,16 +241,20 @@ impl Node for Null {
         None
     }
 
-    fn prune(&self)->NodeRef {
+    fn prune(&self) -> NodeRef {
         unreachable!()
     }
 
-    fn get_name(&self)->&'static str {
+    fn get_name(&self) -> &'static str {
         "NULL"
     }
 
-    fn get_child(&self, _child_index: usize)->&NodeRef {
+    fn get_child(&self, _child_index: usize) -> &NodeRef {
         unreachable!()
+    }
+
+    fn get_max_depth(&self) -> usize {
+        0
     }
 }
 
@@ -309,7 +313,7 @@ impl Node for Val {
     fn set_child(&mut self, _child_index: usize, _child: NodeRef) {
         panic!("Cannot set child node for Val node!!");
     }
-    fn get_child(&self, _child_index: usize)->&NodeRef {
+    fn get_child(&self, _child_index: usize) -> &NodeRef {
         unreachable!()
     }
     fn get_type_zero(&self) -> NodeRef {
@@ -381,13 +385,16 @@ impl Node for Val {
         }
     }
 
-
-    fn prune(&self)->NodeRef {
+    fn prune(&self) -> NodeRef {
         self.deep_copy()
     }
 
-    fn get_name(&self)->&'static str {
+    fn get_name(&self) -> &'static str {
         "Val"
+    }
+
+    fn get_max_depth(&self) -> usize {
+        1
     }
 }
 
@@ -423,7 +430,7 @@ impl Node for Var {
     fn set_child(&mut self, _child_index: usize, _child: NodeRef) {
         panic!("Cannot set child node for Var node!!");
     }
-    fn get_child(&self, _child_index: usize)->&NodeRef {
+    fn get_child(&self, _child_index: usize) -> &NodeRef {
         unreachable!()
     }
     fn get_type_zero(&self) -> NodeRef {
@@ -497,12 +504,16 @@ impl Node for Var {
             None
         }
     }
-    
-    fn prune(&self)->NodeRef {
+
+    fn prune(&self) -> NodeRef {
         self.deep_copy()
     }
-    fn get_name(&self)->&'static str {
+    fn get_name(&self) -> &'static str {
         "Var"
+    }
+
+    fn get_max_depth(&self) -> usize {
+        1
     }
 }
 

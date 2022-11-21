@@ -152,7 +152,9 @@ impl<T: 'static + UnaryOpKind> Node for UnaryOpBase<T> {
         depth: usize,
         params: &mut BuilderParams,
     ) -> Option<NodeRef> {
-        if new_node.get_rtype() == T::RTYPE
+        if depth + new_node.get_max_depth() > params.max_depth {
+            None
+        } else if new_node.get_rtype() == T::RTYPE
             && params.randomizer.gen::<f32>() < params.get_mut_prob(probability, depth)
         {
             Some(new_node)
@@ -189,5 +191,9 @@ impl<T: 'static + UnaryOpKind> Node for UnaryOpBase<T> {
             ("Abs", "Abs") => self.arg.prune(),
             _ => Self::make(self.arg.prune()),
         }
+    }
+
+    fn get_max_depth(&self) -> usize {
+        self.arg.get_max_depth() + 1
     }
 }

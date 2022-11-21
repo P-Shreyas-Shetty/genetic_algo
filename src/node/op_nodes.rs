@@ -1,13 +1,11 @@
 ///This module defines basic arithmatic operators
-
 use super::base::*;
 use super::binary_node_base as bb;
-
 
 pub struct AddEval;
 
 impl bb::BinOpKind for AddEval {
-   const NAME: &'static str = "+";
+    const NAME: &'static str = "+";
 
     fn eval(lhs: Type, rhs: Type) -> Type {
         match (rhs, lhs) {
@@ -25,8 +23,7 @@ pub type Add = bb::BinOpBase<AddEval>;
 pub struct SubEval;
 
 impl bb::BinOpKind for SubEval {
-    
-   const NAME: &'static str = "-";
+    const NAME: &'static str = "-";
 
     fn eval(lhs: Type, rhs: Type) -> Type {
         match (rhs, lhs) {
@@ -44,7 +41,7 @@ pub type Sub = bb::BinOpBase<SubEval>;
 pub struct MulEval;
 
 impl bb::BinOpKind for MulEval {
-   const NAME: &'static str = "*";
+    const NAME: &'static str = "*";
 
     fn eval(lhs: Type, rhs: Type) -> Type {
         match (rhs, lhs) {
@@ -62,8 +59,7 @@ pub type Mul = bb::BinOpBase<MulEval>;
 pub struct DivEval;
 
 impl bb::BinOpKind for DivEval {
-    
-   const NAME: &'static str = "/";
+    const NAME: &'static str = "/";
 
     fn eval(lhs: Type, rhs: Type) -> Type {
         match (rhs, lhs) {
@@ -81,7 +77,7 @@ pub type Div = bb::BinOpBase<DivEval>;
 pub struct PowEval;
 
 impl bb::BinOpKind for PowEval {
-   const NAME: &'static str = "**";
+    const NAME: &'static str = "**";
 
     fn eval(lhs: Type, rhs: Type) -> Type {
         match (rhs, lhs) {
