@@ -50,7 +50,11 @@ impl<T: 'static + UnaryOpKind> Node for UnaryOpBase<T> {
     }
 
     fn to_str(&self, indent: usize) -> String {
-        " ".repeat(indent) + T::NAME + "\n" + &self.arg.to_str(indent + 1)
+        ".".repeat(indent) + T::NAME + "\n" + &self.arg.to_str(indent + 1)
+    }
+    ///returns equation in string format
+    fn get_equation(&self)->String {
+        format!("{}({})", T::NAME, self.arg.get_equation())
     }
 
     fn get_arg_types(&self) -> &[TypeV] {

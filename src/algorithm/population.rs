@@ -3,6 +3,7 @@ use super::expr_tree::{self as et, Error};
 use rand::distributions::weighted::WeightedIndex;
 use rand::distributions::Distribution;
 use rand::Rng;
+use std::time::Instant;
 
 pub struct TrainingArgs<'a> {
     /// training data input
@@ -33,8 +34,14 @@ pub struct TrainingArgs<'a> {
     /// minim difference in error from one iteration to next iteraton
     /// expected it to be considered "changed"
     pub delta_th: f32,
+    /// Max allowed error, after an solution
+    /// with error less than or equal to this,
+    /// training is stopped
+    pub max_allowed_err: f32,
     /// enables logging
     pub log_en: bool,
+    /// enables logging execution time
+    pub exec_time_log_en: bool,
 }
 
 impl<'a> TrainingArgs<'a> {
@@ -53,6 +60,8 @@ impl<'a> TrainingArgs<'a> {
             purge_period: 1,
             delta_th: 0.01,
             mass_extinction_th: 50,
+            max_allowed_err: 0.0,
+            exec_time_log_en: false,
         }
     }
     #[allow(dead_code)]
@@ -67,6 +76,15 @@ impl<'a> TrainingArgs<'a> {
         self.train_y = Some(val);
         self
     }
+    #[allow(dead_code)]
+    /// Max allowed error, after an solution
+    /// with error less than or equal to this,
+    /// training is stopped
+    pub fn max_allowed_err(mut self, val: f32) -> Self {
+        self.max_allowed_err = val;
+        self
+    }
+
     #[allow(dead_code)]
     /// number of subjects in population at the end of iteration
     pub fn n_subs(mut self, val: usize) -> Self {
@@ -95,6 +113,12 @@ impl<'a> TrainingArgs<'a> {
     /// enables logging
     pub fn log_en(mut self, val: bool) -> Self {
         self.log_en = val;
+        self
+    }
+    #[allow(dead_code)]
+    /// enables logging execution time
+    pub fn exec_time_log_en(mut self, val: bool) -> Self {
+        self.exec_time_log_en = val;
         self
     }
 
@@ -152,6 +176,16 @@ impl<'a> TrainingArgs<'a> {
     }
 }
 
+macro_rules! log_execution_time {
+    ( $msg: expr, $arg: stmt, $log: expr) => {
+        let start_time = Instant::now();
+        $arg
+        if($log) {
+            println!("    >>> {} :: Execution time = {:#?}", $msg, start_time.elapsed());
+        }
+    };
+}
+
 #[allow(dead_code)]
 pub struct Population {
     //All the nodes in the population
@@ -207,7 +241,7 @@ impl Population {
             //randomly do a weighted selection
             let p = &self.p[weighted_dist.sample(&mut self.params.randomizer)];
             let mut_prob = if let Error::Err { real: r, nan: _n } = p.error {
-                r
+                r * mut_prob
             } else {
                 mut_prob
             };
@@ -236,13 +270,25 @@ impl Population {
         let weights: Vec<_> = (0..initial_population).rev().collect();
         let weighted_dist = WeightedIndex::new(&weights).unwrap();
         for _ in 0..num_tries {
-            let maybe_father_gene = self.p[weighted_dist.sample(&mut self.params.randomizer)]
+            let father_tree = &self.p[weighted_dist.sample(&mut self.params.randomizer)];
+            let mother_tree = &self.p[self.params.randomizer.gen_range(0..initial_population)];
+            let adj_father_breed_prob = if let Error::Err { real: r, nan: _n } = father_tree.error {
+                r * breeding_prob
+            } else {
+                breeding_prob
+            };
+            let adj_mother_breed_prob = if let Error::Err { real: r, nan: _n } = mother_tree.error {
+                r * breeding_prob
+            } else {
+                breeding_prob
+            };
+            let maybe_father_gene = father_tree
                 .root
-                .get_random_child(breeding_prob, 0, &mut self.params);
+                .get_random_child(adj_father_breed_prob, 0, &mut self.params);
             if let Some(father_gene) = maybe_father_gene {
-                let maybe_child = self.p[self.params.randomizer.gen_range(0..initial_population)]
+                let maybe_child = mother_tree
                     .root
-                    .set_random_child(father_gene, breeding_prob, 0, &mut self.params);
+                    .set_random_child(father_gene, adj_mother_breed_prob, 0, &mut self.params);
                 if let Some(child) = maybe_child {
                     self.p.push(et::Expr::new(child));
                     n_success += 1;
@@ -263,7 +309,11 @@ impl Population {
     #[allow(dead_code)]
     pub fn calc_err(&mut self, train_x: &[Vec<nb::Type>], train_y: &[nb::Type]) {
         for p in self.p.iter_mut() {
-            p.calc_err(train_x, train_y);
+            //if error is already calculated for a subject,
+            //its not required to recalculate the error again
+            if let Error::Uncalculated = p.error {
+                p.calc_err(train_x, train_y);
+            }
         }
     }
     ///Sorts the population accordig to fitness,
@@ -305,23 +355,51 @@ impl Population {
         self.init_population(num_subs); //Start with few kids in the beginning
         for i in 0..n_iter {
             if args.log_en {
-                println!("Log: n_iter {i}")
+                println!("Log: n_iter {i}; Present population {}", self.p.len());
             }
-            self.prune_population();
-            self.calc_err(train_x, train_y); //calculate the errors expression tree
-            self.sort_population(args.log_en); //sort the population by error
+            log_execution_time!(
+                "prune_population",
+                self.prune_population(),
+                args.exec_time_log_en
+            );
+            log_execution_time!(
+                "calc_err",
+                self.calc_err(train_x, train_y),
+                args.exec_time_log_en
+            ); //calculate the errors expression tree
+            log_execution_time!(
+                "sort_population",
+                self.sort_population(args.log_en),
+                args.exec_time_log_en
+            ); //sort the population by error
             if i % args.purge_period == 0 {
-                self.purge_unfit(num_subs, args.log_en);
+                log_execution_time!(
+                    "purge_unfit",
+                    self.purge_unfit(num_subs, args.log_en),
+                    args.exec_time_log_en
+                );
             }
             let l = (self.p.len() * args.top_children_ratio.0) / args.top_children_ratio.1;
             if i % args.new_sub_intro_period == 0 {
-                self.init_population(
-                    (num_subs * args.new_sub_increase_ratio.0) / args.new_sub_increase_ratio.1,
+                log_execution_time!(
+                    "init_population",
+                    self.init_population(
+                        (num_subs * args.new_sub_increase_ratio.0) / args.new_sub_increase_ratio.1,
+                    ),
+                    args.exec_time_log_en
                 );
             }
             if i != n_iter - 1 {
-                self.cross_breed(l, breed_prob, args.log_en);
-                self.generate_mutants(l, mut_prob, args.log_en);
+                log_execution_time!(
+                    "cross_breed",
+                    self.cross_breed(l, breed_prob, args.log_en),
+                    args.exec_time_log_en
+                );
+                log_execution_time!(
+                    "generate_mutants",
+                    self.generate_mutants(l, mut_prob, args.log_en),
+                    args.exec_time_log_en
+                );
             }
 
             if args.log_en {
@@ -355,10 +433,17 @@ impl Population {
             //and fill the population with new random children
             if stagnant_cycles >= args.mass_extinction_th {
                 if args.log_en {
-                    println!("   ### Triggering mass extinction ##");
+                    println!("   ### Triggering mass extinction ###");
                 }
-                self.purge_unfit(1, args.log_en);
-                self.init_population(num_subs - 1);
+                log_execution_time!(
+                    "mass_extinction",
+                    {
+                        self.purge_unfit(1, args.log_en);
+                        self.init_population(num_subs - 1);
+                    },
+                    args.exec_time_log_en
+                );
+
                 stagnant_cycles = 0;
             }
         }

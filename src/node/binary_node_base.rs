@@ -37,7 +37,7 @@ macro_rules! impl_binary_operation_node {
 
         impl Node for $name {
             fn to_str(&self, indent: usize) -> String {
-                " ".repeat(indent)
+                ".".repeat(indent)
                     + $str_ident
                     + "\n"
                     + &self.lhs.to_str(indent + 1)
@@ -268,12 +268,16 @@ impl<T: 'static + BinOpKind> BinOpBase<T> {
 
 impl<T: 'static + BinOpKind> Node for BinOpBase<T> {
     fn to_str(&self, indent: usize) -> String {
-        " ".repeat(indent)
+        ".".repeat(indent)
             + T::NAME
             + "\n"
             + &self.lhs.to_str(indent + 1)
             + "\n"
             + &self.rhs.to_str(indent + 1)
+    }
+    ///returns equation in string format
+    fn get_equation(&self)->String {
+        format!("({} {} {} )", self.lhs.get_equation(), T::NAME, self.rhs.get_equation())
     }
     fn eval(&self, args: &[Type]) -> Type {
         let rhs = self.rhs.eval(args);

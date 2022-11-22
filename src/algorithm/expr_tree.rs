@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+
 use super::super::node::base as nb;
 use std::cmp::Ordering;
 
@@ -94,11 +95,22 @@ impl Expr {
         self.root.type_check()
     }
 
-    pub fn calc_err(&mut self, train_x: &[Vec<nb::Type>], train_y: &[nb::Type]) {
+    /// calculates the error of an expression tree.
+    /// Takes input and expected outputs as argument,
+    /// calculates the output from the given input;
+    /// sets the `error` field of the tree with average
+    /// error over all the given inputs.
+    pub fn calc_err(
+        &mut self,
+        train_x: &[Vec<nb::Type>],
+        train_y: &[nb::Type],
+        
+    ) {
         let mut err_real: f32 = 0.0;
         let mut err_nan: f32 = 0.0;
 
         for i in 0..train_x.len() {
+           
             let e = match (self.root.eval(&train_x[i]), train_y[i]) {
                 (nb::Type::Float(pred_y_dat), nb::Type::Float(train_y_dat)) => {
                     if train_y_dat != 0.0 {

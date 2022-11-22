@@ -99,6 +99,7 @@ pub trait Node {
     /// each node is evaluated and value is passed up the tree
     fn eval(&self, args: &[Type]) -> Type;
     fn to_str(&self, indent: usize) -> String;
+    fn get_equation(&self)->String;
     fn get_rtype(&self) -> TypeV;
     fn get_arg_types(&self) -> &[TypeV];
     fn set_child(&mut self, child_index: usize, child: NodeRef);
@@ -176,6 +177,9 @@ impl Null {
 impl Node for Null {
     fn to_str(&self, indent: usize) -> String {
         format!("{}{:#?}", " ".repeat(indent), self.rtype)
+    }
+    fn get_equation(&self)->String {
+        unreachable!()
     }
     fn get_rtype(&self) -> TypeV {
         self.rtype
@@ -298,6 +302,10 @@ impl Node for Val {
     fn to_str(&self, indent: usize) -> String {
         format!("{}{}", " ".repeat(indent), self.v)
     }
+    ///returns equation in string format
+    fn get_equation(&self)->String {
+        format!("{}", self.v)
+    }
     /// On evaluation, value returns constant it represents
     fn eval(&self, _: &[Type]) -> Type {
         self.v
@@ -417,6 +425,10 @@ impl Var {
 impl Node for Var {
     fn to_str(&self, indent: usize) -> String {
         format!("{}x[{}]", " ".repeat(indent), self.idx)
+    }
+    ///returns equation in string format
+    fn get_equation(&self)->String {
+        format!("x[{}]", self.idx)
     }
     fn eval(&self, args: &[Type]) -> Type {
         args[self.idx]

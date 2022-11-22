@@ -42,6 +42,10 @@ impl Node for Cond {
             + &self.iftrue.to_str(indent + 1)
             + &self.iffalse.to_str(indent + 1)
     }
+    ///returns equation in string format
+    fn get_equation(&self)->String {
+        format!("({}? {}: {}) ", self.cond.get_equation(), self.iftrue.get_equation(), self.iffalse.get_equation())
+    }
     fn eval(&self, args: &[Type]) -> Type {
         let c = self.cond.eval(args);
         let t = self.iftrue.eval(args);
