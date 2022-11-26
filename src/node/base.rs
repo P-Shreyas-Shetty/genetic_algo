@@ -391,7 +391,7 @@ impl Node for Val {
         } else {
             None
         }
-    }
+    } 
 
     fn prune(&self) -> NodeRef {
         self.deep_copy()
@@ -568,11 +568,11 @@ impl BuilderTable {
         }
     }
 
-    pub fn get_rand_node<'a>(
+    pub fn get_rand_node(
         &self,
         depth: usize,
         rtype: TypeV,
-        params: &'a mut BuilderParams,
+        params: &mut BuilderParams,
     ) -> &NodeRef {
         if (params.randomizer.gen::<f32>() <= params.termination_probability)
             || (depth >= params.max_depth)
@@ -646,6 +646,10 @@ impl BuilderParams {
     }
     pub fn set_termination_probability(&mut self, val: f32) {
         self.termination_probability = val;
+    }
+    pub fn set_seed(&mut self, seed: u64) {
+        let mut array = [seed];
+        self.randomizer.fill(&mut array);
     }
     pub fn get_mut_prob(&self, base_prob: f32, depth: usize) -> f32 {
         let s = (usize::pow(2, depth as u32) as f32) * base_prob;

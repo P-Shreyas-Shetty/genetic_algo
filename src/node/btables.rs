@@ -27,6 +27,8 @@ impl FloatFnTable {
         float_fn_table.table.push(TypeV::Float, math::Exp::zero());
         float_fn_table.table.push(TypeV::Float, math::Log::zero());
         float_fn_table.table.push(TypeV::Float, math::Abs::zero());
+        float_fn_table.table.push(TypeV::Float, math::Heaviside::zero());
+        float_fn_table.table.push(TypeV::Float, math::ReLu::zero());
         float_fn_table.table.push(
             TypeV::Float,
             ops::Add::zero(TypeV::Float, vec![TypeV::Float, TypeV::Float]),

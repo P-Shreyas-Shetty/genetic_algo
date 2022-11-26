@@ -40,8 +40,13 @@ pub struct TrainingArgs<'a> {
     pub max_allowed_err: f32,
     /// enables logging
     pub log_en: bool,
+    /// Error function to compare predicted output vs actual output
+    /// The error should be normalized
+    pub err_fn: Box<dyn Fn(nb::Type, nb::Type) -> f32>,
     /// enables logging execution time
     pub exec_time_log_en: bool,
+    /// maximum possible population at the end of an iteration
+    pub max_population: usize,
 }
 
 impl<'a> TrainingArgs<'a> {
@@ -62,6 +67,17 @@ impl<'a> TrainingArgs<'a> {
             mass_extinction_th: 50,
             max_allowed_err: 0.0,
             exec_time_log_en: false,
+            err_fn: Box::new(|act_val, pred_val| match (act_val, pred_val) {
+                (nb::Type::Float(pred_y_dat), nb::Type::Float(train_y_dat)) => {
+                    if train_y_dat != 0.0 {
+                        ((pred_y_dat - train_y_dat) / train_y_dat).abs()
+                    } else {
+                        pred_y_dat.abs()
+                    }
+                }
+                (_, _) => unimplemented!(),
+            }),
+            max_population: 10000,
         }
     }
     #[allow(dead_code)]
@@ -157,11 +173,24 @@ impl<'a> TrainingArgs<'a> {
         self.mass_extinction_th = val;
         self
     }
+    /// err function to compare expected data and predicted data
+    #[allow(dead_code)]
+    pub fn err_fn(mut self, val: Box<dyn Fn(nb::Type, nb::Type) -> f32>) -> Self {
+        self.err_fn = val;
+        self
+    }
+
     #[allow(dead_code)]
     /// minim difference in error from one iteration to next iteraton
     /// expected it to be considered "changed"
     pub fn delta_th(mut self, val: f32) -> Self {
         self.delta_th = val;
+        self
+    }
+    #[allow(dead_code)]
+    /// maximum possible population at the end of an iteration
+    pub fn max_population(mut self, val: usize)->Self {
+        self.max_population = val;
         self
     }
     /// checks the argument for correctness
@@ -282,13 +311,17 @@ impl Population {
             } else {
                 breeding_prob
             };
-            let maybe_father_gene = father_tree
-                .root
-                .get_random_child(adj_father_breed_prob, 0, &mut self.params);
-            if let Some(father_gene) = maybe_father_gene {
-                let maybe_child = mother_tree
+            let maybe_father_gene =
+                father_tree
                     .root
-                    .set_random_child(father_gene, adj_mother_breed_prob, 0, &mut self.params);
+                    .get_random_child(adj_father_breed_prob, 0, &mut self.params);
+            if let Some(father_gene) = maybe_father_gene {
+                let maybe_child = mother_tree.root.set_random_child(
+                    father_gene,
+                    adj_mother_breed_prob,
+                    0,
+                    &mut self.params,
+                );
                 if let Some(child) = maybe_child {
                     self.p.push(et::Expr::new(child));
                     n_success += 1;
@@ -307,12 +340,17 @@ impl Population {
     }
 
     #[allow(dead_code)]
-    pub fn calc_err(&mut self, train_x: &[Vec<nb::Type>], train_y: &[nb::Type]) {
+    pub fn calc_err(
+        &mut self,
+        train_x: &[Vec<nb::Type>],
+        train_y: &[nb::Type],
+        err_fn: &dyn Fn(nb::Type, nb::Type) -> f32,
+    ) {
         for p in self.p.iter_mut() {
             //if error is already calculated for a subject,
             //its not required to recalculate the error again
             if let Error::Uncalculated = p.error {
-                p.calc_err(train_x, train_y);
+                p.calc_err(train_x, train_y, err_fn);
             }
         }
     }
@@ -364,7 +402,7 @@ impl Population {
             );
             log_execution_time!(
                 "calc_err",
-                self.calc_err(train_x, train_y),
+                self.calc_err(train_x, train_y, &args.err_fn),
                 args.exec_time_log_en
             ); //calculate the errors expression tree
             log_execution_time!(
@@ -406,7 +444,7 @@ impl Population {
                 println!();
             }
             if let Error::Err { real, nan } = self.p[0].error {
-                if real == 0.0 && nan == 0.0 {
+                if real <= args.max_allowed_err && nan == 0.0 {
                     break;
                 }
                 if let Error::Err {
@@ -445,6 +483,10 @@ impl Population {
                 );
 
                 stagnant_cycles = 0;
+            }
+            if self.p.len() > args.max_population {
+                // clip the maximum population 
+                self.purge_unfit(args.max_population, args.log_en);
             }
         }
         self.p[0].clone()

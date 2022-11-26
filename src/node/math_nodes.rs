@@ -38,3 +38,47 @@ single_arg_fn_node_def!(ATanh, __ATanh, f32::atanh);
 single_arg_fn_node_def!(Exp, __Exp, f32::exp);
 single_arg_fn_node_def!(Log, __Log, f32::ln);
 single_arg_fn_node_def!(Abs, __Abs, f32::abs);
+
+pub struct __Heaviside {}
+
+impl ub::UnaryOpKind for __Heaviside {
+    const NAME:&'static str = "Heaviside";
+    const ARG_TYPE: TypeV = TypeV::Float;
+    const RTYPE: TypeV = TypeV::Float;
+    
+    fn eval(input: Type) -> Type {
+        match input {
+            Type::Float(x) => {
+                if x>=0.0 {Type::Float(1.0)} else {Type::Float(0.0)}
+            }
+            _ => unreachable!()
+        }
+    }
+}
+
+#[allow(dead_code)]
+/// Heaviside function; defined as 
+/// H(x) = (x>=0) ? 1.0; 0.0
+pub type Heaviside = ub::UnaryOpBase<__Heaviside>;
+
+pub struct __ReLu {}
+
+impl ub::UnaryOpKind for __ReLu {
+    const NAME:&'static str = "ReLu";
+    const ARG_TYPE: TypeV = TypeV::Float;
+    const RTYPE: TypeV = TypeV::Float;
+    
+    fn eval(input: Type) -> Type {
+        match input {
+            Type::Float(x) => {
+                if x>=0.0 {Type::Float(x)} else {Type::Float(0.0)}
+            }
+            _ => unreachable!()
+        }
+    }
+}
+
+#[allow(dead_code)]
+/// ReLu function; defined as 
+/// ReLu(x) = (x>=0) ? x; 0.0
+pub type ReLu = ub::UnaryOpBase<__ReLu>;

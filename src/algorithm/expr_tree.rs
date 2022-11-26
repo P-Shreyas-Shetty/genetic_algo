@@ -104,6 +104,7 @@ impl Expr {
         &mut self,
         train_x: &[Vec<nb::Type>],
         train_y: &[nb::Type],
+        err_fn: &dyn Fn(nb::Type, nb::Type)->f32
         
     ) {
         let mut err_real: f32 = 0.0;
@@ -111,16 +112,7 @@ impl Expr {
 
         for i in 0..train_x.len() {
            
-            let e = match (self.root.eval(&train_x[i]), train_y[i]) {
-                (nb::Type::Float(pred_y_dat), nb::Type::Float(train_y_dat)) => {
-                    if train_y_dat != 0.0 {
-                        ((pred_y_dat - train_y_dat) / train_y_dat).abs()
-                    } else {
-                        pred_y_dat.abs()
-                    }
-                }
-                (_, _) => unimplemented!(),
-            };
+            let e = (err_fn)(train_y[i], self.root.eval(&train_x[i]));
             if e.is_finite() {
                 err_real += e;
             } else {
