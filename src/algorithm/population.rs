@@ -40,7 +40,8 @@ pub struct TrainingArgs<'a> {
     pub max_allowed_err: f32,
     /// enables logging
     pub log_en: bool,
-    /// Error function to compare predicted output vs actual output
+    /// Error function to compare predicted output vs actual output,
+    /// of the form (actual_val, predicted_val)->error
     /// The error should be normalized
     pub err_fn: Box<dyn Fn(nb::Type, nb::Type) -> f32>,
     /// enables logging execution time
@@ -173,7 +174,9 @@ impl<'a> TrainingArgs<'a> {
         self.mass_extinction_th = val;
         self
     }
-    /// err function to compare expected data and predicted data
+    /// err function to compare expected data and predicted data;
+    /// of the form (actual_val, predicted_val)->error.
+    /// The error should be normalised
     #[allow(dead_code)]
     pub fn err_fn(mut self, val: Box<dyn Fn(nb::Type, nb::Type) -> f32>) -> Self {
         self.err_fn = val;
