@@ -49,12 +49,12 @@ impl<T: 'static + UnaryOpKind> Node for UnaryOpBase<T> {
         T::RTYPE
     }
 
-    fn to_str(&self, indent: usize) -> String {
-        ".".repeat(indent) + T::NAME + "\n" + &self.arg.to_str(indent + 1)
+    fn get_tree_str(&self, indent: usize) -> String {
+        ".".repeat(indent) + T::NAME + "\n" + &self.arg.get_tree_str(indent + 1)
     }
     ///returns equation in string format
-    fn get_equation(&self)->String {
-        format!("{}({})", T::NAME, self.arg.get_equation())
+    fn get_equation_str(&self)->String {
+        format!("{}({})", T::NAME, self.arg.get_equation_str())
     }
 
     fn get_arg_types(&self) -> &[TypeV] {
@@ -72,7 +72,7 @@ impl<T: 'static + UnaryOpKind> Node for UnaryOpBase<T> {
             _ => unreachable!(),
         }
     }
-    fn get_type_zero(&self) -> NodeRef {
+    fn get_zero_node(&self) -> NodeRef {
         Self::zero()
     }
     fn build_random_node<'a>(
@@ -83,7 +83,7 @@ impl<T: 'static + UnaryOpKind> Node for UnaryOpBase<T> {
         depth: usize,
         params: &'a mut BuilderParams,
     ) -> NodeRef {
-        let mut node = Self::get_type_zero(self);
+        let mut node = Self::get_zero_node(self);
         let arg = build_table
             .get_rand_node(depth + 1, node_rtype, params)
             .build_random_node(build_table, arg_types, node_rtype, depth + 1, params);
@@ -91,7 +91,7 @@ impl<T: 'static + UnaryOpKind> Node for UnaryOpBase<T> {
         node
     }
     fn deep_copy(&self) -> NodeRef {
-        let mut ret = self.get_type_zero();
+        let mut ret = self.get_zero_node();
         ret.set_child(0, self.arg.deep_copy());
         ret
     }

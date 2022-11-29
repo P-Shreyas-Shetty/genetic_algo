@@ -192,7 +192,7 @@ impl<'a> TrainingArgs<'a> {
     }
     #[allow(dead_code)]
     /// maximum possible population at the end of an iteration
-    pub fn max_population(mut self, val: usize)->Self {
+    pub fn max_population(mut self, val: usize) -> Self {
         self.max_population = val;
         self
     }
@@ -488,7 +488,7 @@ impl Population {
                 stagnant_cycles = 0;
             }
             if self.p.len() > args.max_population {
-                // clip the maximum population 
+                // clip the maximum population
                 self.purge_unfit(args.max_population, args.log_en);
             }
         }

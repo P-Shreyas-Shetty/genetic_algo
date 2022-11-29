@@ -88,7 +88,7 @@ impl Expr {
     }
 
     pub fn to_str(&self) -> String {
-        self.root.to_str(0)
+        self.root.get_tree_str(0)
     }
 
     pub fn type_check(&self) -> Result<(), nb::TypeErr> {

@@ -267,17 +267,17 @@ impl<T: 'static + BinOpKind> BinOpBase<T> {
 }
 
 impl<T: 'static + BinOpKind> Node for BinOpBase<T> {
-    fn to_str(&self, indent: usize) -> String {
+    fn get_tree_str(&self, indent: usize) -> String {
         ".".repeat(indent)
             + T::NAME
             + "\n"
-            + &self.lhs.to_str(indent + 1)
+            + &self.lhs.get_tree_str(indent + 1)
             + "\n"
-            + &self.rhs.to_str(indent + 1)
+            + &self.rhs.get_tree_str(indent + 1)
     }
     ///returns equation in string format
-    fn get_equation(&self)->String {
-        format!("({} {} {} )", self.lhs.get_equation(), T::NAME, self.rhs.get_equation())
+    fn get_equation_str(&self)->String {
+        format!("({} {} {} )", self.lhs.get_equation_str(), T::NAME, self.rhs.get_equation_str())
     }
     fn eval(&self, args: &[Type]) -> Type {
         let rhs = self.rhs.eval(args);
@@ -307,7 +307,7 @@ impl<T: 'static + BinOpKind> Node for BinOpBase<T> {
         }
     }
 
-    fn get_type_zero(&self) -> NodeRef {
+    fn get_zero_node(&self) -> NodeRef {
         Self::zero(self.rtype, self.arg_types.clone())
     }
     fn build_random_node<'a>(
@@ -318,7 +318,7 @@ impl<T: 'static + BinOpKind> Node for BinOpBase<T> {
         depth: usize,
         params: &'a mut BuilderParams,
     ) -> NodeRef {
-        let mut node = Self::get_type_zero(self);
+        let mut node = Self::get_zero_node(self);
         let lhs = build_table
             .get_rand_node(depth + 1, node_rtype, params)
             .build_random_node(build_table, arg_types, node_rtype, depth + 1, params);

@@ -5,32 +5,33 @@ use algorithm::population as ap;
 use node::base as nb;
 use node::btables::FloatFnTable;
 use rand::Rng;
-//use std::f32::consts::PI;
+use std::f32::consts::PI;
 
 fn main() {
+    // get the predefined function table
     let table = FloatFnTable::new().table;
-    let mut params = nb::BuilderParams::new().max_depth(9).float_range(-1.0, 1.0);
-    params.set_seed(123);
-    let mut params0 = nb::BuilderParams::new().max_depth(6);
-    params0.set_seed(345);
-    //let mut popln = ap::Population::new(vec![nb::TypeV::Float, nb::TypeV::Float], nb::TypeV::Float);
+
+    // parameters for building the trees
+    let params = nb::BuilderParams::new()
+        .max_depth(6)
+        .float_range(-1.0, 1.0);
+
+    // randomizer for random number generation
+    let mut rng = rand::thread_rng();
+
+    // declare the population model
+    // the expression tree to be generated is to take single float as arg and return arg
     let mut popln = ap::Population::new(vec![nb::TypeV::Float], nb::TypeV::Float);
+
+    // generate training data
     let (train_x, train_y) = {
         let mut train_x = Vec::<Vec<nb::Type>>::new();
         let mut train_y = Vec::<nb::Type>::new();
         for _ in 0..256 {
-            //let (x, y) = (
-            //    params0.randomizer.gen_range(-5.0..=5.0),
-            //    params0.randomizer.gen_range(-5.0..=5.0),
-            //);
-            let x = params0.randomizer.gen_range(-10.0..=10.0);
-            //train_x.push(vec![nb::Type::float(x), nb::Type::float(y)]);
+            let x = rng.gen_range(-10.0..=10.0);
             train_x.push(vec![nb::Type::float(x)]);
-            //train_y.push(nb::Type::float(x.powf(y)+y.powf(x)-x.powf(x)-y.powf(y)));
-            train_y.push(nb::Type::float(if (-1.0..=1.0).contains(&x) {
-                x.abs() * 6.0
-            } else if (2.0..=3.0).contains(&x) || (-3.0..=-2.0).contains(&x) {
-                x * x
+            train_y.push(nb::Type::float(if (-2.0*PI..=2.0*PI).contains(&x) {
+                (x*x.sin()+rng.gen_range(-0.1..=0.1)).exp() //noisy input data
             } else {
                 0.0
             }));
@@ -38,8 +39,13 @@ fn main() {
         (train_x, train_y)
     };
 
+    // to train the model, set the build table
     popln.set_build_table(table);
+
+    // set expression tree params
     popln.set_params(params);
+
+    // now run the algorithm
     let top_kid = popln.train(
         &ap::TrainingArgs::new()
             .train_x(&train_x)
@@ -50,7 +56,7 @@ fn main() {
             .new_sub_increase_ratio(1, 5)
             .new_sub_intro_period(20)
             .purge_period(6)
-            .n_iter(5000)
+            .n_iter(8000)
             .mass_extinction_th(50)
             .delta_th(0.08)
             .breed_probability(1.0)
@@ -60,7 +66,7 @@ fn main() {
             .compile(),
     );
 
-    
+    // print the top 10 expressions
     for (i, p) in popln.p.iter().enumerate() {
         println!(
             ">>>[{i}]\n{}\n###### error={:#?} #####\n========================================",
@@ -71,8 +77,9 @@ fn main() {
             break;
         }
     }
+    //print the top kid's expression
     println!(
             "################### TOP_KID #####################\n{}\n{:#?}\n DEPTH={}========================================",
-            top_kid.root.get_equation(), top_kid.error, top_kid.root.get_max_depth()
+            top_kid.root.get_equation_str(), top_kid.error, top_kid.root.get_max_depth()
         );
 }

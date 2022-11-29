@@ -98,14 +98,31 @@ pub type NodeRef = Box<dyn Node>;
 pub trait Node {
     /// each node is evaluated and value is passed up the tree
     fn eval(&self, args: &[Type]) -> Type;
-    fn to_str(&self, indent: usize) -> String;
-    fn get_equation(&self)->String;
+    /// returns string representation of the node in the form of tree
+    fn get_tree_str(&self, indent: usize) -> String;
+    /// get the string representation of expression in the form of mathematical expression
+    fn get_equation_str(&self)->String;
+    /// returns the return type of the node
     fn get_rtype(&self) -> TypeV;
+    /// return the argument types
     fn get_arg_types(&self) -> &[TypeV];
+    /// sets the nth child of the node;
+    /// the exact child to be set depends on node type
     fn set_child(&mut self, child_index: usize, child: NodeRef);
 
+    /// return a reference to nth child of the node
     fn get_child(&self, child_index: usize) -> &NodeRef;
-    fn get_type_zero(&self) -> NodeRef;
+    /// returns a Zero value for the node
+    /// the zero value of the node is the one where all
+    /// the children of the node are set to Null node.
+    /// This is useful for building expression tree,
+    /// where zero value will be intermediate form
+    fn get_zero_node(&self) -> NodeRef;
+    /// this method builds a random tree with
+    /// the implemnted Node type as root, by calling
+    /// the method recursively for children.
+    /// The nodes are chosen randomly from the build_table;
+    /// build_params are misc parameters required
     fn build_random_node<'a>(
         &self,
         build_table: &'a BuilderTable,
@@ -114,7 +131,13 @@ pub trait Node {
         depth: usize,
         params: &'a mut BuilderParams,
     ) -> NodeRef;
+    /// recursively copies a node and its children and returns
+    /// the copy
     fn deep_copy(&self) -> NodeRef;
+    /// recursively copies a node and its children with a 
+    /// random chance that it'll return a random node_tree
+    /// instead. The chance of actual node being replaced with random
+    /// branch increases as the depth of recursion increases
     fn mutant_copy<'a>(
         &self,
         probability: f32,
@@ -123,6 +146,7 @@ pub trait Node {
         build_table: &'a BuilderTable,
         params: &'a mut BuilderParams,
     ) -> Option<NodeRef>;
+    /// checks if constructed expression tree is valid
     fn type_check(&self) -> Result<(), TypeErr>;
     //these two methods are required for "conjugation" of two trees
     //to form a brand new child tree
@@ -136,10 +160,11 @@ pub trait Node {
         depth: usize,
         params: &'_ mut BuilderParams,
     ) -> Option<NodeRef>;
-    /// takes a node and randomly selects a child node and replaces it with
-    /// child node.
-    /// probability increases as you go down recursively
-    /// in case no node was selected, it will return null
+    /// Takes a node and randomly selects a child node and replaces it with
+    /// new_node.
+    /// probability of child being selected
+    /// increases as you go down recursively.
+    /// In case no node was selected, it will return null
     fn set_random_child(
         &self,
         new_node: NodeRef,
@@ -155,6 +180,7 @@ pub trait Node {
 
     fn get_name(&self) -> &'static str;
 
+    /// recursively calculates the depth of the deepest branch of a node
     fn get_max_depth(&self) -> usize;
 }
 
@@ -175,10 +201,10 @@ impl Null {
 }
 
 impl Node for Null {
-    fn to_str(&self, indent: usize) -> String {
+    fn get_tree_str(&self, indent: usize) -> String {
         format!("{}{:#?}", " ".repeat(indent), self.rtype)
     }
-    fn get_equation(&self)->String {
+    fn get_equation_str(&self)->String {
         unreachable!()
     }
     fn get_rtype(&self) -> TypeV {
@@ -191,7 +217,7 @@ impl Node for Null {
     fn get_arg_types(&self) -> &[TypeV] {
         &self.arg_types
     }
-    fn get_type_zero(&self) -> NodeRef {
+    fn get_zero_node(&self) -> NodeRef {
         Null::zero(self.rtype)
     }
     fn set_child(&mut self, _child_index: usize, _child: NodeRef) {
@@ -299,11 +325,11 @@ impl Val {
 }
 
 impl Node for Val {
-    fn to_str(&self, indent: usize) -> String {
+    fn get_tree_str(&self, indent: usize) -> String {
         format!("{}{}", " ".repeat(indent), self.v)
     }
     ///returns equation in string format
-    fn get_equation(&self)->String {
+    fn get_equation_str(&self)->String {
         format!("{}", self.v)
     }
     /// On evaluation, value returns constant it represents
@@ -324,7 +350,7 @@ impl Node for Val {
     fn get_child(&self, _child_index: usize) -> &NodeRef {
         unreachable!()
     }
-    fn get_type_zero(&self) -> NodeRef {
+    fn get_zero_node(&self) -> NodeRef {
         Self::zero(self.rtype)
     }
     fn build_random_node<'a>(
@@ -423,11 +449,11 @@ impl Var {
 }
 
 impl Node for Var {
-    fn to_str(&self, indent: usize) -> String {
+    fn get_tree_str(&self, indent: usize) -> String {
         format!("{}x[{}]", " ".repeat(indent), self.idx)
     }
     ///returns equation in string format
-    fn get_equation(&self)->String {
+    fn get_equation_str(&self)->String {
         format!("x[{}]", self.idx)
     }
     fn eval(&self, args: &[Type]) -> Type {
@@ -445,7 +471,7 @@ impl Node for Var {
     fn get_child(&self, _child_index: usize) -> &NodeRef {
         unreachable!()
     }
-    fn get_type_zero(&self) -> NodeRef {
+    fn get_zero_node(&self) -> NodeRef {
         Self::make(0, self.rtype)
     }
     fn build_random_node<'a>(

@@ -34,17 +34,17 @@ impl Cond {
     }
 }
 impl Node for Cond {
-    fn to_str(&self, indent: usize) -> String {
+    fn get_tree_str(&self, indent: usize) -> String {
         " ".repeat(indent)
             + "?\n"
-            + &self.cond.to_str(indent + 1)
+            + &self.cond.get_tree_str(indent + 1)
             + "\n"
-            + &self.iftrue.to_str(indent + 1)
-            + &self.iffalse.to_str(indent + 1)
+            + &self.iftrue.get_tree_str(indent + 1)
+            + &self.iffalse.get_tree_str(indent + 1)
     }
     ///returns equation in string format
-    fn get_equation(&self)->String {
-        format!("({}? {}: {}) ", self.cond.get_equation(), self.iftrue.get_equation(), self.iffalse.get_equation())
+    fn get_equation_str(&self)->String {
+        format!("({}? {}: {}) ", self.cond.get_equation_str(), self.iftrue.get_equation_str(), self.iffalse.get_equation_str())
     }
     fn eval(&self, args: &[Type]) -> Type {
         let c = self.cond.eval(args);
@@ -80,7 +80,7 @@ impl Node for Cond {
             _ => unreachable!(),
         }
     }
-    fn get_type_zero(&self) -> NodeRef {
+    fn get_zero_node(&self) -> NodeRef {
         Self::zero(self.rtype, self.arg_types.clone())
     }
 
@@ -92,7 +92,7 @@ impl Node for Cond {
         depth: usize,
         params: &'a mut BuilderParams,
     ) -> NodeRef {
-        let mut node = Self::get_type_zero(self);
+        let mut node = Self::get_zero_node(self);
         let cond = build_table
             .get_rand_node(depth + 1, TypeV::Bool, params)
             .build_random_node(build_table, arg_types, TypeV::Bool, depth + 1, params);
